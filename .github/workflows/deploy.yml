@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24 # same as local: tests import modules that read the global navigator (Node 21+)
           cache: npm
       - run: npm ci
       # nothing deploys unless lint and tests pass
