@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <title>We Are Born Remembering, But We Learn to Forget</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <div id="title-screen" class="overlay">
+      <div class="panel">
+        <h1 id="title-text"></h1>
+        <p id="subtitle-text" class="subtitle"></p>
+        <div class="buttons">
+          <button id="btn-begin" class="btn primary" type="button"></button>
+          <span id="vr-slot" class="vr-wrap"></span>
+        </div>
+        <div class="buttons secondary">
+          <button id="btn-chapters" class="btn ghost" type="button"></button>
+          <button id="btn-credits" class="btn ghost" type="button"></button>
+        </div>
+        <p id="headphones-text" class="hint"></p>
+        <p id="howto-text" class="hint small"></p>
+      </div>
+    </div>
+
+    <!-- In-experience menu (flat screens). Also hosts the chapter list and credits. -->
+    <div id="menu" class="overlay menu hidden">
+      <div class="panel" id="menu-main">
+        <h2 id="menu-title"></h2>
+        <div class="stack">
+          <button id="btn-resume" class="btn primary" type="button"></button>
+          <button id="btn-restart" class="btn ghost" type="button"></button>
+          <button id="btn-menu-chapters" class="btn ghost" type="button"></button>
+          <button id="btn-menu-credits" class="btn ghost" type="button"></button>
+        </div>
+        <div class="toggles">
+          <button id="btn-gyro" class="hud-btn hidden" type="button"></button>
+          <button id="btn-narration" class="hud-btn" type="button"></button>
+          <button id="btn-sound" class="hud-btn" type="button"></button>
+        </div>
+      </div>
+      <div class="panel hidden" id="menu-chapters">
+        <h2 id="chapters-title"></h2>
+        <ol id="chapter-list" class="stack chapters"></ol>
+        <button class="btn ghost btn-back" type="button"></button>
+      </div>
+      <div class="panel hidden" id="menu-credits">
+        <h2 id="credits-title"></h2>
+        <div id="credits-list" class="credits"></div>
+        <button class="btn ghost btn-back" type="button"></button>
+      </div>
+    </div>
+
+    <div id="hud" class="hidden">
+      <span id="hud-vr-slot" class="vr-wrap"></span>
+      <button id="btn-menu" class="hud-btn" type="button"></button>
+    </div>
+
+    <div id="debug" class="hidden"></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

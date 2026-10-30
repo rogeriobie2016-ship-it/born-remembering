@@ -1,0 +1,244 @@
+:root {
+  --ink: #f3ede2;
+  --dim: #b9b2a6;
+  --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #000;
+  color: var(--ink);
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app canvas {
+  display: block;
+  touch-action: none;
+  cursor: grab;
+}
+#app canvas:active {
+  cursor: grabbing;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ---------- title screen ---------- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.75) 80%);
+  transition: opacity 1.2s ease;
+  z-index: 10;
+}
+.overlay.fade {
+  opacity: 0;
+  pointer-events: none;
+}
+.panel {
+  max-width: 720px;
+  text-align: center;
+}
+h1 {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(30px, 6vw, 60px);
+  line-height: 1.1;
+  margin: 0 0 12px;
+  text-shadow: 0 0 24px rgba(255, 236, 200, 0.35);
+}
+.subtitle {
+  font-family: var(--serif);
+  font-size: clamp(16px, 2.6vw, 22px);
+  color: var(--dim);
+  margin: 0 0 32px;
+}
+.buttons {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.btn,
+.vr-wrap #VRButton {
+  position: static !important;
+  left: auto !important;
+  bottom: auto !important;
+  width: auto !important;
+  min-width: 150px;
+  padding: 14px 28px !important;
+  font: 600 18px/1 var(--sans) !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(243, 237, 226, 0.6) !important;
+  border-radius: 999px !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.btn:hover,
+.vr-wrap #VRButton:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 0 24px rgba(255, 236, 200, 0.35);
+}
+.btn.primary {
+  background: rgba(243, 237, 226, 0.92) !important;
+  color: #111 !important;
+}
+.hint {
+  font-family: var(--serif);
+  font-size: 18px;
+  color: var(--dim);
+  margin: 6px auto;
+  max-width: 520px;
+}
+.hint.small {
+  font-family: var(--sans);
+  font-size: 13px;
+  opacity: 0.75;
+  line-height: 1.5;
+}
+
+.buttons.secondary {
+  margin-top: -10px;
+}
+.btn.ghost {
+  min-width: 0;
+  padding: 10px 20px !important;
+  font-size: 14px !important;
+  background: transparent !important;
+  border-color: rgba(243, 237, 226, 0.35) !important;
+}
+
+/* ---------- menu, chapters, credits ---------- */
+.overlay.menu {
+  background: rgba(5, 4, 10, 0.86);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 40;
+  overflow-y: auto;
+  align-items: flex-start;
+}
+.overlay.menu .panel {
+  margin: auto;
+  width: 100%;
+  max-width: 420px;
+}
+h2 {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(26px, 5vw, 38px);
+  margin: 0 0 24px;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 24px;
+  padding: 0;
+}
+.stack .btn {
+  width: 100% !important;
+}
+.chapters {
+  list-style: none;
+  counter-reset: ch;
+}
+.chapters .btn {
+  text-align: left;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-family: var(--serif) !important;
+  font-size: 19px !important;
+  font-weight: 400 !important;
+}
+.chapters .btn span {
+  display: inline-block;
+  width: 2.2em;
+  color: var(--dim);
+  font-family: var(--sans);
+  font-size: 12px;
+}
+.toggles {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.credits {
+  font-family: var(--serif);
+  margin-bottom: 24px;
+}
+.credits .role {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin: 18px 0 4px;
+}
+.credits .name {
+  font-size: 20px;
+  font-style: italic;
+  margin: 2px 0;
+}
+
+/* ---------- in-experience HUD (flat screens only) ---------- */
+#hud {
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  z-index: 20;
+}
+.hud-btn,
+#hud .vr-wrap #VRButton {
+  min-width: 0;
+  padding: 8px 12px !important;
+  font: 500 12px/1 var(--sans) !important;
+  letter-spacing: 0.04em;
+  color: var(--ink) !important;
+  background: rgba(0, 0, 0, 0.35) !important;
+  border: 1px solid rgba(243, 237, 226, 0.35) !important;
+  border-radius: 999px !important;
+  cursor: pointer;
+  opacity: 0.7 !important;
+}
+.hud-btn:hover {
+  opacity: 1 !important;
+}
+
+#debug {
+  position: fixed;
+  left: 10px;
+  bottom: 10px;
+  font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace;
+  color: #9f9;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 6px 8px;
+  border-radius: 4px;
+  z-index: 30;
+  pointer-events: none;
+  white-space: pre;
+}

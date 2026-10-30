@@ -1,0 +1,9 @@
+node_modules
+dist
+.DS_Store
+.claude/
+# originals of the paintings (large, not shipped); art/src/list*.tsv map them to Wikimedia Commons
+art/src/*.jpg
+art/src/*.jpeg
+art/src/*.png
+art/src/*.tif
