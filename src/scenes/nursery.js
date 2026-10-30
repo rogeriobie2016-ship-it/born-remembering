@@ -385,7 +385,6 @@ function starShape(r1, r2) {
  */
 export function buildNursery(art = {}) {
   const group = new THREE.Group();
-  const animated = [];
 
   // Room shell (inside-out) with baked light: darker low, glowing around the window.
   const shellGeo = bakeGradient(new THREE.BoxGeometry(6, 3.2, 6, 24, 14, 24), {

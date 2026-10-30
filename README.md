@@ -39,6 +39,17 @@ Useful while building:
 - `?scene=crib&phase=hearing`, `?scene=finale&ending=letgo` — scene parameters · `?speed=4` — fast-forward timelines (testing)
 - **N** key — skip to the next scene · **Esc** — menu (pause, chapters, credits, narration / sound / motion)
 
+## Checks before committing
+
+```bash
+npm run lint    # ESLint
+npm test        # Vitest: content is complete, every scene jump exists, every painting and recording is in public/
+npm run check   # lint + test + build
+```
+
+`npm install` points git at `.githooks/`, whose `pre-commit` runs `npm run check`: a commit that fails lint,
+tests or the build is refused. The deploy workflow runs the same lint and tests, so a broken push never goes live.
+
 ## Test on a phone (same Wi-Fi)
 
 1. `npm run dev` on the PC. Windows may ask to let Node through the firewall: allow it on **private networks**.
@@ -59,8 +70,8 @@ npm run dev:http -- --port 5174
 
 and open `http://localhost:5174` in Quest Browser (localhost counts as secure, so WebXR works).
 
-**Option C — deploy** (simplest for the hackathon): `npm run build` and upload `dist/` to Netlify Drop
-(https://app.netlify.com/drop), or push to GitHub Pages / Vercel. Any HTTPS host works; the build uses relative paths.
+**Option C — the live site:** https://rogeriobie2016-ship-it.github.io/born-remembering/ (HTTPS, so WebXR works).
+Every push to `main` runs lint and tests, builds, and redeploys it (`.github/workflows/deploy.yml`).
 
 ## Controls (same everywhere)
 

@@ -14,7 +14,6 @@ import { loadArt, cutout, groundShadow, cartouche, SCROLL_INK } from '../core/co
 // around you like a paper theatre; the trees, ground and shell are engraved 3D.
 
 const EYE = 1.6;
-const GOLD = { color: '#f3dca0', glow: 'rgba(255,196,120,0.65)' };
 
 /** Scallop shell: a fan of ribs, hinge at the origin, opening along +Y. */
 function shellGeometry(R = 1.6, ribs = 17) {

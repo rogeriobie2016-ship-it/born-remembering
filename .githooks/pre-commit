@@ -1,0 +1,6 @@
+#!/bin/sh
+# Lint, test and build before every commit. Skip in an emergency with: git commit --no-verify
+npm run --silent check || {
+  echo "pre-commit: lint, tests or build failed; nothing was committed." >&2
+  exit 1
+}
