@@ -72,15 +72,32 @@ locomotion.onToggle = (key) => {
 let started = false;
 let paused = false;
 
-/** Start the experience (first time) or jump to a chapter { scene, params }. */
-function begin(chapter) {
+/**
+ * Start the experience, or jump to a chapter { scene, params }.
+ * opts.run: played from the wheel, the chapter's scenes and the sector to come back to. opts.out, opts.color: the fade.
+ */
+function begin(chapter, opts = {}) {
   const target = chapter || { scene: FIRST_SCENE, params: FIRST_PARAMS };
+  manager.run = opts.run || null;
   if (!started) {
     started = true;
     ui.hideTitle();
     ui.showHud(!renderer.xr.isPresenting);
   }
-  ready.then(() => manager.goto(target.scene, target.params || {}, { out: 1.2 }));
+  ready.then(() => manager.goto(target.scene, target.params || {}, { out: opts.out ?? 1.2, color: opts.color }));
+}
+ctx.begin = begin;
+
+/** A chapter as a run from the wheel: it ends when the story leaves its scenes. */
+function runOf(chapter) {
+  const i = content.CHAPTERS.indexOf(chapter);
+  return { scenes: chapter.scenes || [chapter.scene], next: (i + 1) % content.CHAPTERS.length };
+}
+
+/** Back to the wheel. */
+function backToWheel(params = {}) {
+  manager.run = null;
+  manager.goto('title', params, { out: 1.2, in: 1.6 });
 }
 
 function setPaused(on) {
@@ -109,23 +126,38 @@ const ui = setupUI({
   platform,
   xrReady,
   onAction: () => interact.runHeldAction(),
-  onBegin: begin,
+  // On the wheel, "begin" turns the crank. Anywhere else a chapter is a jump.
+  onBegin: (chapter) => {
+    const hub = manager.id === 'title' ? manager.current : null;
+    if (hub?.play) {
+      if (chapter) hub.playChapter(content.CHAPTERS.indexOf(chapter));
+      else hub.play();
+    } else if (chapter) begin(chapter, { run: runOf(chapter) });
+    else begin();
+  },
+  onStep: (d) => manager.current?.stepBy?.(d),
   onPause: setPaused,
-  onRestart: () => begin({ scene: 'prologue' }),
+  onRestart: () => backToWheel(),
 });
+ctx.ui = ui;
 
 input.onTip = ui.setTip;
 interact.onActionChange = ui.setAction;
 window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyE') interact.runHeldAction();
 });
-manager.onChange = () => ui.showControls(!!manager.current?.walkArea, manager.id === 'title' || manager.id === 'credits');
+manager.onChange = () => {
+  ui.showControls(!!manager.current?.walkArea, manager.id === 'title' || manager.id === 'credits');
+  if (manager.id === 'title' && started) {
+    started = false;
+    ui.showTitle();
+  }
+};
 
 renderer.xr.addEventListener('sessionstart', () => {
   look.enabled = false;
   setPaused(false);
   ui.showHud(false);
-  if (!started) begin();
 });
 renderer.xr.addEventListener('sessionend', () => {
   camera.position.set(0, 0, 0);

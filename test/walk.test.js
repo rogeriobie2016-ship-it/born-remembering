@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { clampToArea, teleportArc, stepBody, throwVelocity, tapTarget, glideSpeed } from '../src/core/walk.js';
 import { wrapLines, paginate, MIN_PAGE_SECONDS } from '../src/core/captions.js';
+import { TAU, bandAngle, sectorAt, rotFor, poseAt } from '../src/core/zoetrope.js';
 import * as content from '../src/content.js';
 
 describe('clampToArea', () => {
@@ -119,5 +120,37 @@ describe('clicking the ground', () => {
     expect(glideSpeed(5)).toBeCloseTo(1.8);
     expect(glideSpeed(0.45)).toBeLessThan(1);
     expect(glideSpeed(0.01)).toBeGreaterThan(0);
+  });
+});
+
+describe('the zoetrope', () => {
+  it('moves the band only by whole slots: no strobe, and each tick lands exactly a figure further on', () => {
+    expect(bandAngle(24, 24)).toBeCloseTo(TAU);
+    expect(bandAngle(1, 24)).toBeCloseTo(TAU / 24);
+  });
+
+  it('knows which sector faces you, however far the wheel has turned', () => {
+    const step = TAU / 15;
+    expect(sectorAt(0, 15)).toBe(0);
+    expect(sectorAt(-step * 3, 15)).toBe(3);
+    expect(sectorAt(step, 15)).toBe(14);
+    expect(sectorAt(-step * 3 - TAU * 4, 15)).toBe(3);
+  });
+
+  it('never takes the long way round', () => {
+    const step = TAU / 15;
+    const here = -step * 14 - TAU * 2;
+    const there = rotFor(0, here, 15);
+    expect(Math.abs(there - here)).toBeLessThan(TAU / 2);
+    expect(sectorAt(there, 15)).toBe(0);
+  });
+
+  it('has poses that loop', () => {
+    for (const kind of ['walk', 'fly', 'swim', 'tremble', 'pulse', 'sway']) {
+      const a = poseAt(kind, 0, 24);
+      const b = poseAt(kind, 24, 24);
+      expect(b.y, kind).toBeCloseTo(a.y);
+      expect(b.rot, kind).toBeCloseTo(a.rot);
+    }
   });
 });

@@ -1,4 +1,4 @@
-import { TitleScene } from './TitleScene.js';
+import { ZootropeScene } from './ZootropeScene.js';
 import { SphinxScene } from './SphinxScene.js';
 import { PrologueScene } from './PrologueScene.js';
 import { CribScene } from './CribScene.js';
@@ -21,7 +21,7 @@ import { CreditsScene } from './CreditsScene.js';
 // title → sphinx → prologue → crib{birth} → icarus → crib{hearing} → sirens → orpheus → beethoven → medusa → persephone → hades → choice
 //   → endHold | endLetGo → afterlife{ending} (Styx, Elysium, Lethe) → finale{ending} → (begin again → prologue) | credits
 export const SCENES = {
-  title: TitleScene,
+  title: ZootropeScene,
   sphinx: SphinxScene,
   prologue: PrologueScene,
   crib: CribScene,

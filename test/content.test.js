@@ -59,6 +59,16 @@ describe('scene flow', () => {
     for (const c of content.CHAPTERS) expect(SCENES[c.scene], `chapter "${c.label}"`).toBeDefined();
   });
 
+  it('gives every chapter what the wheel needs', () => {
+    for (const c of content.CHAPTERS) {
+      expect(c.color, c.label).toMatch(/^#[0-9a-f]{6}$/);
+      expect(c.sense, c.label).toBeTruthy();
+      for (const id of c.scenes || []) expect(SCENES[id], `${c.label} scene ${id}`).toBeDefined();
+      expect(existsSync(join(root, `public/art/zoetrope/card-${c.scene}.webp`)), `card for ${c.scene}`).toBe(true);
+    }
+    expect(content.roman(14)).toBe('XIV');
+  });
+
   it('only jumps to scenes that exist (next / skipTo / goto)', () => {
     for (const [file, src] of Object.entries(sources)) {
       for (const [, id] of src.matchAll(/(?:\.next|skipTo\s*=|goto)\(?\s*'([A-Za-z]+)'/g)) {

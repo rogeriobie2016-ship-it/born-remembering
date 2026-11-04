@@ -18,7 +18,7 @@ runs through every life.
 Jowett (Plato, *Republic*), and J. G. Frazer (Apollodorus, *Library*, 1921). All are public domain.
 
 **Flow**
-1. Title, then the Sphinx (onboarding), then Garden, then Crib (birth).
+1. The Zoetrope, then the Sphinx (onboarding), then Garden, then Crib (birth).
 2. Icarus, then Crib (hearing).
 3. Sirens, then Orpheus, then Beethoven.
 4. Medusa, then Persephone's Garden, then Hades, then the Choice.
@@ -29,11 +29,11 @@ On-screen narration is shown in *italics*. Myth quotations are shown as quotes, 
 
 ---
 
-## 0 · Title
-**On screen:** *We Are Born Remembering, But We Learn to Forget.* Subtitle: *An immersive memory in nine scenes.*
-**Instructions:**
-- *Headphones recommended · 6–8 minutes.*
-- *Look around by dragging, moving your phone, or turning your head. Hold your gaze on a light, or click, tap or pull the trigger, to choose.*
+## 0 · The Zoetrope (the title, and the hub)
+**What happens:** a great painted zoetrope in a dark orange grove, with Botticelli's Cupid flying round it. Each chapter has an arch in the wheel: its painting on the back wall, its figure standing in front. Turn the wheel and it settles on a chapter; its figure fills the moving band above. Turn the crank: the band quickens, one slot at a time, until the figures come alive, with no flash at all. At the height of it you dive into the arch.
+**Interactions:** turn the wheel (drag, swipe, arrow keys, stick, or grip and sweep your arm); click or point at a scene to turn to it; turn the crank.
+**Two ways through:** from the first chapter the whole story plays, one life into the next. From any other chapter, that chapter plays and you come back to the wheel, with the next one chosen.
+**Text:** the title; each chapter's number, name and sense.
 
 ---
 

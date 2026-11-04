@@ -39,5 +39,7 @@ too (`CREDITS` in `src/content.js`).
 | `argus-engraving.jpg` | Theodoor van Thulden after Primaticcio, *Ulysses Known by Argos*, from *Les Travaux d'Ulysse*, 1633 (BI-1883-1235-37) | CC0 · Rijksmuseum | `endings/argus` |
 | `landseer.jpg` | Edwin Landseer, *The Old Shepherd's Chief Mourner*, 1837 | Public domain · Commons | `endings/argos` (silhouette traced by hand) |
 
+`zoetrope/` is made from all of the above by `art/tools/zoetrope.py`: a card for each chapter, and the two atlases of the sculpture.
+
 Missing files never break a scene: `loadArt()` resolves them to `null` and the scene
 leaves that figure out.

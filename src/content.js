@@ -26,6 +26,13 @@ export const POEM = {
 export const UI = {
   subtitle: 'An immersive memory in fourteen scenes',
   begin: 'Begin',
+  playChapter: 'Play this chapter',
+  zootrope: 'Back to the wheel',
+  hubHint: {
+    desktop: 'Drag the wheel, or use the arrows  ·  click a scene to turn to it  ·  click it again, or the crank, to enter',
+    phone: 'Swipe to turn the wheel  ·  tap a scene to turn to it  ·  tap it again to enter',
+    xr: 'Stick, or grip and sweep your arm, to turn  ·  turn the crank to enter',
+  },
   headphones: 'Headphones recommended · about 16 minutes',
   howTo: {
     desktop: 'Drag to look around. Click whatever glows. In open places, walk with WASD or click the ground.',
@@ -44,7 +51,7 @@ export const UI = {
     },
   },
   // Beside the mouse pointer.
-  tips: { choose: 'Click', pick: 'Click to pick up', touch: 'Click to touch', shake: 'Click to shake', pull: 'Click to pull', turn: 'Click to turn the page', stop: 'Click to stop' },
+  tips: { choose: 'Click', pick: 'Click to pick up', touch: 'Click to touch', shake: 'Click to shake', pull: 'Click to pull', turn: 'Click to turn the page', stop: 'Click to stop', crank: 'Turn the crank' },
   tipThrow: { desktop: 'Click to throw', phone: 'Tap to throw' },
   narrationOn: 'Narration: on',
   narrationOff: 'Narration: off',
@@ -339,23 +346,37 @@ export const MYTHS = {
 };
 
 // Capítulos (menu). `scene` + `params` = onde começar.
+// id: the scene. sense: the memory's sense. color: its arch on the zoetrope. pose: how its figure moves on the band.
+// scenes: played from the wheel, the chapter ends when the story leaves these scenes, and you are back at the wheel.
+// card: public/art/zoetrope/card-<scene>.webp, made by art/tools/zoetrope.py, with the atlases of the sculpture.
 export const CHAPTERS = [
-  { label: 'The Sphinx', scene: 'sphinx' },
-  { label: 'The Garden', scene: 'prologue' },
-  { label: 'The Crib', scene: 'crib' },
-  { label: 'Icarus', scene: 'icarus' },
-  { label: 'The Sirens', scene: 'sirens' },
-  { label: 'Orpheus and Eurydice', scene: 'orpheus' },
-  { label: 'Beethoven', scene: 'beethoven' },
-  { label: 'Medusa', scene: 'medusa' },
-  { label: 'Persephone’s Garden', scene: 'persephone' },
-  { label: 'Hades', scene: 'hades' },
-  { label: 'The Choice', scene: 'choice' },
-  { label: 'Holding On', scene: 'endHold' },
-  { label: 'Letting Go', scene: 'endLetGo' },
-  { label: 'The Afterlife', scene: 'afterlife', params: { ending: 'hold' } },
-  { label: 'Every Life at Once', scene: 'finale', params: { ending: 'hold' } },
+  { label: 'The Sphinx', scene: 'sphinx', sense: 'The threshold', color: '#1f7f83', pose: 'pulse' },
+  { label: 'The Garden', scene: 'prologue', sense: 'Before', color: '#b5302b', pose: 'sway' },
+  { label: 'The Crib', scene: 'crib', sense: 'Birth', color: '#d08a2e', pose: 'tremble' },
+  { label: 'Icarus', scene: 'icarus', sense: 'Sight', color: '#2f6fb0', pose: 'fly' },
+  { label: 'The Sirens', scene: 'sirens', sense: 'Hearing', color: '#157a6e', pose: 'swim' },
+  { label: 'Orpheus and Eurydice', scene: 'orpheus', sense: 'Sight, and sound', color: '#5f7a35', pose: 'walk' },
+  { label: 'Beethoven', scene: 'beethoven', sense: 'Hearing', color: '#7c2b4f', pose: 'sway' },
+  { label: 'Medusa', scene: 'medusa', sense: 'Sight', color: '#39693c', pose: 'pulse' },
+  { label: 'Persephone’s Garden', scene: 'persephone', sense: 'Taste', color: '#c2502c', scenes: ['persephone', 'hades'], pose: 'sway' },
+  { label: 'Hades', scene: 'hades', sense: 'Touch', color: '#4a2a78', pose: 'sway' },
+  { label: 'The Choice', scene: 'choice', sense: 'Memory', color: '#a8772a', scenes: ['choice', 'endHold', 'endLetGo'], pose: 'pulse' },
+  { label: 'Holding On', scene: 'endHold', sense: 'Feeling', color: '#a13a55', pose: 'tremble' },
+  { label: 'Letting Go', scene: 'endLetGo', sense: 'Feeling', color: '#5b6a78', pose: 'sway' },
+  { label: 'The Afterlife', scene: 'afterlife', sense: 'Forgetting', color: '#1c5f8c', params: { ending: 'hold' }, pose: 'swim' },
+  { label: 'Every Life at Once', scene: 'finale', sense: 'Every sense', color: '#8e3fa0', params: { ending: 'hold' }, scenes: ['finale', 'credits'], pose: 'pulse' },
 ];
+
+/** Chapter numbers, as a book would have them. */
+export function roman(n) {
+  return [['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]].reduce((out, [r, v]) => {
+    while (n >= v) {
+      out += r;
+      n -= v;
+    }
+    return out;
+  }, '');
+}
 
 // Créditos (menu e cena final). Troque os nomes!
 export const CREDITS = [

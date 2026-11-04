@@ -116,6 +116,13 @@ export class SceneManager {
    * opts: { color: '#000' | '#fff', out: seconds, in: seconds, hold: seconds }
    */
   async goto(id, params = {}, opts = {}) {
+    // A chapter played from the wheel ends when the story leaves it: back to the wheel, the next chapter chosen.
+    if (this.run && id !== 'title' && !this.run.scenes.includes(id)) {
+      params = { sector: this.run.next };
+      id = 'title';
+      opts = { out: 2, in: 2 };
+      this.run = null;
+    }
     if (this.busy) {
       this.queued = [id, params, opts];
       return;

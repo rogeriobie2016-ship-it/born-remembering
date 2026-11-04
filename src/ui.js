@@ -8,17 +8,19 @@ const CONTROLS_SECONDS = 9;
  * credits, narration / sound / motion toggles) and the small flat-screen HUD.
  * Callbacks:
  *   onBegin(chapter?)  start — optionally at a chapter { scene, params }
+ *   onStep(d)          turn the wheel by d chapters
  *   onPause(paused)    the menu opened / closed
  *   onRestart()
  */
-export function setupUI({ content, renderer, audio, narrator, look, prefs, isMobile, platform, xrReady, onAction, onBegin, onPause, onRestart }) {
-  const { UI, TITLE, CHAPTERS, CREDITS } = content;
+export function setupUI({ content, renderer, audio, narrator, look, prefs, isMobile, platform, xrReady, onAction, onBegin, onStep, onPause, onRestart }) {
+  const { UI, TITLE, CHAPTERS, CREDITS, roman } = content;
   let started = false;
 
   $('title-text').textContent = TITLE;
   $('subtitle-text').textContent = UI.subtitle;
   $('headphones-text').textContent = UI.headphones;
-  $('howto-text').textContent = UI.howTo[platform()];
+  $('howto-text').textContent = UI.hubHint[platform()];
+  document.documentElement.style.setProperty('--grove', `url(${import.meta.env.BASE_URL}art/garden/grove.webp)`);
   $('menu-title').textContent = TITLE;
   $('chapters-title').textContent = UI.chapters;
   $('credits-title').textContent = UI.credits;
@@ -27,7 +29,7 @@ export function setupUI({ content, renderer, audio, narrator, look, prefs, isMob
     ['btn-chapters', UI.chapters],
     ['btn-credits', UI.credits],
     ['btn-resume', UI.resume],
-    ['btn-restart', UI.restart],
+    ['btn-restart', UI.zootrope],
     ['btn-menu-chapters', UI.chapters],
     ['btn-menu-credits', UI.credits],
     ['btn-menu', UI.menu],
@@ -49,6 +51,14 @@ export function setupUI({ content, renderer, audio, narrator, look, prefs, isMob
     onBegin(chapter);
   }
   $('btn-begin').addEventListener('click', () => start());
+  $('hub-prev').addEventListener('click', () => {
+    unlock();
+    onStep(-1);
+  });
+  $('hub-next').addEventListener('click', () => {
+    unlock();
+    onStep(1);
+  });
 
   // ---------- Enter VR ----------
   let vrButton = null;
@@ -111,14 +121,29 @@ export function setupUI({ content, renderer, audio, narrator, look, prefs, isMob
     else if (started) openMenu();
   });
 
+  // the chapters: a pack of painted cards
   const list = $('chapter-list');
   CHAPTERS.forEach((ch, i) => {
     const li = document.createElement('li');
     const b = document.createElement('button');
-    b.className = 'btn ghost';
+    b.className = 'card';
     b.type = 'button';
-    b.innerHTML = `<span>${String(i + 1).padStart(2, '0')}</span>`;
-    b.append(ch.label);
+    b.style.setProperty('--tone', ch.color);
+    const img = document.createElement('img');
+    img.src = `${import.meta.env.BASE_URL}art/zoetrope/card-${ch.scene}.webp`;
+    img.alt = '';
+    img.loading = 'lazy';
+    img.draggable = false;
+    const num = document.createElement('span');
+    num.className = 'card-num';
+    num.textContent = roman(i + 1);
+    const name = document.createElement('span');
+    name.className = 'card-name';
+    name.textContent = ch.label;
+    const sense = document.createElement('span');
+    sense.className = 'card-sense';
+    sense.textContent = ch.sense;
+    b.append(img, num, name, sense);
     b.addEventListener('click', () => {
       if (started) onPause(false);
       start(ch);
@@ -191,6 +216,7 @@ export function setupUI({ content, renderer, audio, narrator, look, prefs, isMob
   }
 
   let controlsTimer = 0;
+  let titleTimer = 0;
   const tipEl = $('tip');
   const controlsEl = $('controls-hint');
   const actionEl = $('action-btn');
@@ -227,8 +253,31 @@ export function setupUI({ content, renderer, audio, narrator, look, prefs, isMob
     hideTitle() {
       const el = $('title-screen');
       el.classList.add('fade');
-      setTimeout(() => el.classList.add('hidden'), 1200);
+      clearTimeout(titleTimer);
+      titleTimer = setTimeout(() => el.classList.add('hidden'), 1200);
       if (vrButton) $('hud-vr-slot').appendChild(vrButton); // keep "Enter VR" reachable mid-experience
+    },
+    /** Back on the wheel. */
+    showTitle() {
+      const el = $('title-screen');
+      clearTimeout(titleTimer);
+      started = false;
+      closeMenu(false);
+      $('hud').classList.add('hidden');
+      el.classList.remove('hidden', 'fade', 'playing');
+      if (vrButton) $('vr-slot').appendChild(vrButton);
+    },
+    /** The wheel has settled on a chapter. */
+    setChapter(ch, i) {
+      $('hub-num').textContent = roman(i + 1);
+      $('hub-name').textContent = ch.label;
+      $('hub-sense').textContent = ch.sense;
+      $('hub-caption').style.setProperty('--tone', ch.color);
+      $('btn-begin').textContent = i === 0 ? UI.begin : UI.playChapter;
+    },
+    /** The crank is turning: the words get out of the way. */
+    setPlaying(on) {
+      $('title-screen').classList.toggle('playing', on);
     },
     showHud(show = true) {
       $('hud').classList.toggle('hidden', !show);

@@ -13,21 +13,30 @@
   <body>
     <div id="app"></div>
 
-    <div id="title-screen" class="overlay">
-      <div class="panel">
+    <div id="title-screen" class="overlay hub">
+      <header class="hub-head">
+        <p class="ornament" aria-hidden="true"></p>
         <h1 id="title-text"></h1>
         <p id="subtitle-text" class="subtitle"></p>
+      </header>
+      <footer class="hub-foot">
+        <div id="hub-caption" class="hub-caption">
+          <button id="hub-prev" class="hub-arrow" type="button" aria-label="Previous chapter"></button>
+          <div class="hub-plate">
+            <span class="hub-line"><span id="hub-num"></span><span id="hub-sense"></span></span>
+            <strong id="hub-name"></strong>
+          </div>
+          <button id="hub-next" class="hub-arrow" type="button" aria-label="Next chapter"></button>
+        </div>
         <div class="buttons">
           <button id="btn-begin" class="btn primary" type="button"></button>
           <span id="vr-slot" class="vr-wrap"></span>
-        </div>
-        <div class="buttons secondary">
           <button id="btn-chapters" class="btn ghost" type="button"></button>
           <button id="btn-credits" class="btn ghost" type="button"></button>
         </div>
-        <p id="headphones-text" class="hint"></p>
         <p id="howto-text" class="hint small"></p>
-      </div>
+        <p id="headphones-text" class="hint small"></p>
+      </footer>
     </div>
 
     <!-- In-experience menu (flat screens). Also hosts the chapter list and credits. -->
@@ -48,9 +57,9 @@
           <button id="btn-sound" class="hud-btn" type="button"></button>
         </div>
       </div>
-      <div class="panel hidden" id="menu-chapters">
+      <div class="panel wide hidden" id="menu-chapters">
         <h2 id="chapters-title"></h2>
-        <ol id="chapter-list" class="stack chapters"></ol>
+        <ol id="chapter-list" class="cards"></ol>
         <button class="btn ghost btn-back" type="button"></button>
       </div>
       <div class="panel hidden" id="menu-credits">
