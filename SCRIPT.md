@@ -228,6 +228,14 @@ Title in 3D: *We are born remembering, / but we learn to forget.*
 
 ---
 
+## Eros and Psyche
+**Sense:** feeling. **Sources:** Apuleius, *The Golden Ass*; Canova; Burne-Jones, Waterhouse, Bouguereau.
+**What happens:** Night, and nothing to see but a lamp. You take it. Someone sleeps on the bed; Burne-Jones painted this same night on the wall behind him. Bring the flame to his face (on a flat screen, click him) and a drop of oil falls: he wakes and is gone in feathers. The moon comes up on Canova's marble, twice life size, the kiss that never lands. Paintings stand around it, and as your flame comes near they open: the figure steps out of the frame and the world goes back behind it. A heartbeat grows as you near the statue, in your hands on a headset. At her feet is Persephone's box. Opening it is the end: no beauty, only sleep. The lamp dies. You lie in her place with his face above you, and it comes no closer, and the heart stops.
+**Interactions:** take the lamp; hold it over his face; open the paintings by walking to them; reach for the gap between the two mouths; lift the lid.
+**Text:** provisional, until the narration is rewritten.
+
+---
+
 ## 8 · The Choice
 **Myth:** Achilles' two fates (*Iliad* IX). His visual restyle is still pending.
 **What happens:** you are back in the crib, and your mother offers her hand. You can hold it or let go.

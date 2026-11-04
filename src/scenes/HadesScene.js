@@ -189,7 +189,7 @@ function tabTexture() {
 }
 
 export class HadesScene extends BaseScene {
-  skipTo = 'choice';
+  skipTo = 'eros';
 
   async enter() {
     const { ctx } = this;
@@ -615,7 +615,7 @@ export class HadesScene extends BaseScene {
     });
     await this.say(M.spring, { hold: 1 });
     await this.say(H.close, { hold: 1.2 });
-    this.next('choice', {}, { color: '#ffffff', out: 3, in: 2 });
+    this.next('eros', {}, { color: '#000000', out: 3, in: 2 });
   }
 
   update(dt, t) {

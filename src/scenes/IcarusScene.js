@@ -212,7 +212,7 @@ function sunTexture() {
 }
 
 /** One feather, close enough to look at: a quill, and barbs drawn by hand. */
-function featherTexture() {
+export function featherTexture() {
   return paintedTexture(128, 512, (c, w, h) => {
     const cx = w / 2;
     c.beginPath();

@@ -24,7 +24,7 @@ const BAND_N = 16;
 const BAND_R = 2.42;
 const BAND_Y = 3.92;
 const BAND_H = 1.55;
-const COLS = 5;
+const COLS = 6;
 const ROWS = 3;
 
 const _m = new THREE.Matrix4();

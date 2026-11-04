@@ -1,4 +1,5 @@
 import { ZootropeScene } from './ZootropeScene.js';
+import { ErosScene } from './ErosScene.js';
 import { SphinxScene } from './SphinxScene.js';
 import { PrologueScene } from './PrologueScene.js';
 import { CribScene } from './CribScene.js';
@@ -22,6 +23,7 @@ import { CreditsScene } from './CreditsScene.js';
 //   → endHold | endLetGo → afterlife{ending} (Styx, Elysium, Lethe) → finale{ending} → (begin again → prologue) | credits
 export const SCENES = {
   title: ZootropeScene,
+  eros: ErosScene,
   sphinx: SphinxScene,
   prologue: PrologueScene,
   crib: CribScene,
@@ -42,4 +44,4 @@ export const SCENES = {
 };
 
 // Used by the N (skip) key when a scene sets no `skipTo`.
-export const ORDER = ['title', 'sphinx', 'prologue', 'crib', 'icarus', 'sirens', 'orpheus', 'beethoven', 'medusa', 'persephone', 'hades', 'choice', 'endHold', 'afterlife', 'finale', 'credits'];
+export const ORDER = ['title', 'sphinx', 'prologue', 'crib', 'icarus', 'sirens', 'orpheus', 'beethoven', 'medusa', 'persephone', 'hades', 'eros', 'choice', 'endHold', 'afterlife', 'finale', 'credits'];

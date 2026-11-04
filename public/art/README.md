@@ -24,6 +24,12 @@ too (`CREDITS` in `src/content.js`).
 | `icarus-engraving.jpg` | *The Fall of Icarus*, engraving, 1730 (RP-P-OB-51.285) | CC0 · Rijksmuseum | `icarus/`: boat, rock |
 | `sirens-draper.jpg` | Herbert James Draper, *Ulysses and the Sirens*, c. 1909 | Public domain · Commons | `sirens/`: sirens-climbing, siren-rope |
 | `sirens-waterhouse.jpg` | John William Waterhouse, *Ulysses and the Sirens*, 1891 | Public domain · Google Art Project via Commons | `sirens/`: harpy-left, -a, -b, -right, -mast (not used: the mast cuts her in two), ulysses (re-cut as his standing figure) |
+| `psyche-bj-lamp.jpg` | Edward Burne-Jones, *Psyche, Holding the Lamp, Gazes at Cupid*, Palace Green Murals (1922P191) | Public domain · Birmingham Museums Trust via Commons | `psyche/`: lamp-mural (the arch of its doorway let through), eros (traced by hand; low resolution, the best source there is), cloth |
+| `psyche-bj-fountain.jpg` | Edward Burne-Jones, *Cupid Finding Psyche Asleep by a Fountain*, Palace Green Murals (1922P187) | Public domain · Birmingham Museums Trust via Commons | `psyche/fountain` |
+| `psyche-bj-olympus.jpg` | Edward Burne-Jones, *Psyche Entering the Portals of Olympus*, Palace Green Murals | Public domain · Google Art Project via Commons | `psyche/olympus` |
+| `psyche-box-waterhouse.jpg` | John William Waterhouse, *Psyche Opening the Golden Box*, 1903 | Public domain · Commons | `psyche/`: box, box-back, night-wood (its trees, gone to moonlight); `zoetrope/` |
+| `psyche-garden-waterhouse.jpg` | John William Waterhouse, *Psyche Entering Cupid's Garden*, 1903 (Harris Museum) | Public domain · Commons | `psyche/`: garden, garden-back (low resolution) |
+| `psyche-bouguereau.jpg` | William-Adolphe Bouguereau, *The Abduction of Psyche*, 1895 | Public domain · Commons | `psyche/`: rapture, rapture-back; `zoetrope/` |
 | `orpheus-corot.jpg` | Camille Corot, *Orpheus Leading Eurydice from the Underworld*, 1861 | Public domain · Google Art Project via Commons | `orpheus/`: grove, grove-crown (his leaves), grove-tufts, grove-ground, shades-a, shades-b |
 | `orpheus-rubens.jpg` | Peter Paul Rubens, *Orpheus and Eurydice*, 1636–38 (Prado) | Public domain · Commons | `orpheus/`: couple, orpheus (Pluto's foot painted out with her own drapery) |
 | `orpheus-leighton.jpg` | Frederic Leighton, *Orpheus and Eurydice*, 1864 | Public domain · Commons | `orpheus/leighton` |
@@ -40,6 +46,8 @@ too (`CREDITS` in `src/content.js`).
 | `landseer.jpg` | Edwin Landseer, *The Old Shepherd's Chief Mourner*, 1837 | Public domain · Commons | `endings/argos` (silhouette traced by hand) |
 
 `zoetrope/` is made from all of the above by `art/tools/zoetrope.py`: a card for each chapter, and the two atlases of the sculpture.
+
+`psyche/canova.bin` is not a painting and not public domain: it is an adaptation of a CC BY-NC-SA 4.0 scan. See `CREDITS.md`.
 
 Missing files never break a scene: `loadArt()` resolves them to `null` and the scene
 leaves that figure out.

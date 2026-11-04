@@ -170,6 +170,34 @@ export const PERSEPHONE = {
   you: 'One seed. And now you are her.',
 };
 
+// Eros and Psyche (Apuleius). Provisional words: the narration is rewritten as a whole, later.
+export const EROS = {
+  rule: 'He came only in the dark. You had one rule: never look.',
+  hintLamp: { desktop: 'Click the lamp', phone: 'Tap the lamp', xr: 'Take the lamp' },
+  dark: 'You had been told he was a monster.',
+  hintLook: { desktop: 'He is on the bed. Click him', phone: 'He is on the bed. Tap him', xr: 'Hold the flame over his face' },
+  closer: 'Come closer',
+  face: 'He was not a monster.',
+  drop: 'One drop of oil. That is all it ever takes.',
+  gone: 'Love cannot be looked at. It left by the ceiling.',
+  years: 'You went after him. Through every door there is.',
+  hintWalk: { desktop: 'Walk with your flame to the paintings', phone: 'Walk with your flame to the paintings', xr: 'Bring your flame to the paintings' },
+  kiss: 'Since 1793, he has been about to.',
+  windows: {
+    garden: 'You went into every garden.',
+    rapture: 'You remember being carried. It felt like this.',
+    fountain: 'He watched you sleep. You never knew.',
+    box: 'You were told not to open it.',
+    olympus: 'In some tellings this ends in heaven.',
+  },
+  hintBox: { desktop: 'The box, at her feet: click it', phone: 'The box, at her feet: tap it', xr: 'The box, at her feet: lift the lid' },
+  box: 'Persephone sent it up with you. Her beauty, in a box. You were told not to look.',
+  sleep: 'You looked.',
+  notBeauty: 'There was no beauty in it. Only sleep.',
+  above: 'He is coming.',
+  still: 'He is still coming.',
+};
+
 // O Hades: o livro pop-up.
 export const HADES = {
   open: 'The dead keep their stories in a book. It opens for you.',
@@ -360,6 +388,7 @@ export const CHAPTERS = [
   { label: 'Medusa', scene: 'medusa', sense: 'Sight', color: '#39693c', pose: 'pulse' },
   { label: 'Persephone’s Garden', scene: 'persephone', sense: 'Taste', color: '#c2502c', scenes: ['persephone', 'hades'], pose: 'sway' },
   { label: 'Hades', scene: 'hades', sense: 'Touch', color: '#4a2a78', pose: 'sway' },
+  { label: 'Eros and Psyche', scene: 'eros', sense: 'Feeling', color: '#b03a3a', pose: 'fly' },
   { label: 'The Choice', scene: 'choice', sense: 'Memory', color: '#a8772a', scenes: ['choice', 'endHold', 'endLetGo'], pose: 'pulse' },
   { label: 'Holding On', scene: 'endHold', sense: 'Feeling', color: '#a13a55', pose: 'tremble' },
   { label: 'Letting Go', scene: 'endLetGo', sense: 'Feeling', color: '#5b6a78', pose: 'sway' },
@@ -402,6 +431,9 @@ export const CREDITS = [
     // In order of appearance. Full sources and licences: public/art/README.md
     role: 'Paintings & engravings',
     names: [
+      'Edward Burne-Jones — Palace Green Murals, Cupid and Psyche (Birmingham Museums Trust)',
+      'John William Waterhouse — Psyche Opening the Golden Box; Psyche Entering Cupid’s Garden, 1903',
+      'William-Adolphe Bouguereau — The Abduction of Psyche, 1895',
       'Gustave Moreau — Oedipus and the Sphinx, 1864',
       'Sandro Botticelli — Primavera, c. 1480',
       'Sandro Botticelli — The Birth of Venus, c. 1485',
@@ -440,6 +472,10 @@ export const CREDITS = [
       'Public domain and CC0, via Wikimedia Commons, The Metropolitan Museum of Art, the Rijksmuseum and the Museo del Prado',
       'Cut out, coloured and collaged for this piece',
     ],
+  },
+  {
+    role: 'Sculpture',
+    names: ['Antonio Canova, Psyche Revived by Cupid’s Kiss, 1787–93 (Louvre)', 'Scan: Scan The World, CC BY-NC-SA 4.0. Simplified for this piece'],
   },
   { role: 'Built with', names: ['three.js · WebXR · Web Audio · Web Speech'] },
   { role: 'Typeface', names: ['Cormorant Garamond (SIL Open Font License)'] },

@@ -1,8 +1,8 @@
 """The chapters, as paintings. For each chapter:
 
   zoetrope/card-<scene>.webp   a card for the chapter list: its painting, with its figure collaged in front
-  zoetrope/panels.webp         5x3 atlas: the paintings alone, the back wall of each arch of the sculpture
-  zoetrope/figures.webp        5x3 atlas: the figures alone, standing in the arches and on the moving band
+  zoetrope/panels.webp         6x3 atlas: the paintings alone, the back wall of each arch of the sculpture
+  zoetrope/figures.webp        6x3 atlas: the figures alone, standing in the arches and on the moving band
 
 Run from the repository root:  python -I art/tools/zoetrope.py
 """
@@ -33,6 +33,7 @@ CHAPTERS = [
     ('medusa', SRC + 'medusa-burnejones.jpg', (0.5, 0.42, 1.1), [('medusa/shield', 0.42, 0.5, 0.86)]),
     ('persephone', SRC + 'persephone-crane.jpg', (0.13, 0.5, 1.0), [('persephone/maidens', 0.42, 0.5, 0.95)]),
     ('hades', SRC + 'charon-dore.jpg', (0.62, 0.42, 1.25), [('persephone/proserpine', 0.72, 0.5, 1.0)]),
+    ('eros', SRC + 'psyche-box-waterhouse.jpg', (0.5, 0.42, 1.15), [('psyche/rapture', 0.9, 0.5, 0.99)]),
     ('choice', SRC + 'david-andromache.jpg', (0.5, 0.4, 1.1), [('crib/amphora', 0.46, 0.5, 0.95)]),
     ('endHold', SRC + 'hector-fright.jpg', (0.5, 0.5, 1.0), [('crib/andromache-face', 0.5, 0.5, 0.98)]),
     ('endLetGo', SRC + 'argus-engraving.jpg', (0.5, 0.5, 1.1), [('endings/argos', 0.34, 0.5, 0.96)]),
@@ -92,7 +93,7 @@ def vignette(size, strength):
 
 
 def main():
-    cols, rows = 5, 3
+    cols, rows = 6, 3
     panels = Image.new('RGB', (cols * CELL[0], rows * CELL[1]))
     figs = Image.new('RGBA', (cols * CELL[0], rows * CELL[1]), (0, 0, 0, 0))
     for i, (scene, path, centre, items) in enumerate(CHAPTERS):
