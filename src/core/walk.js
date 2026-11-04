@@ -127,3 +127,17 @@ export function throwVelocity(samples, max = 12) {
   const s = Math.hypot(...v);
   return s > max ? v.map((c) => (c * max) / s) : v;
 }
+
+/** Where one click takes you: toward the point, but no further than `reach`. */
+export function tapTarget(hx, hz, x, z, reach) {
+  const dx = x - hx;
+  const dz = z - hz;
+  const d = Math.hypot(dx, dz);
+  if (d <= reach) return [x, z];
+  return [hx + (dx / d) * reach, hz + (dz / d) * reach];
+}
+
+/** Gliding to a clicked point: walking pace, slowing into the last metre so that you arrive, not brake. */
+export function glideSpeed(remaining, pace = 1.8, slowFrom = 0.9) {
+  return Math.max(0.35, pace * Math.min(1, remaining / slowFrom));
+}

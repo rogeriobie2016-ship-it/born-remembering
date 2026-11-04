@@ -120,7 +120,7 @@ export class PrologueScene extends BaseScene {
     this.groveMats = [];
     if (T.meadow) {
       T.meadow.wrapS = T.meadow.wrapT = THREE.RepeatWrapping;
-      T.meadow.repeat.set(12, 12);
+      T.meadow.repeat.set(8, 8);
     }
     const groundMat = new THREE.MeshBasicMaterial({ map: T.meadow, color: T.meadow ? '#8f8f86' : '#141a10', transparent: true });
     this.groveMats.push(groundMat);

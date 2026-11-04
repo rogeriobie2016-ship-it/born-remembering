@@ -44,7 +44,7 @@ export const UI = {
     },
   },
   // Beside the mouse pointer.
-  tips: { choose: 'Click', pick: 'Click to pick up', touch: 'Click to touch', shake: 'Click to shake', pull: 'Click to pull', turn: 'Click to turn the page' },
+  tips: { choose: 'Click', pick: 'Click to pick up', touch: 'Click to touch', shake: 'Click to shake', pull: 'Click to pull', turn: 'Click to turn the page', stop: 'Click to stop' },
   tipThrow: { desktop: 'Click to throw', phone: 'Tap to throw' },
   narrationOn: 'Narration: on',
   narrationOff: 'Narration: off',
@@ -130,9 +130,20 @@ export const ICARUS = {
   holdHint: 'Hold on — click, tap or pull the trigger',
   slip: 'The hand slips.',
   fragment: '’Tis better to have loved and lost',
+  hintSun: 'Look at the sun. It is looking at him',
+  hintFeather: { desktop: 'A feather. Click to catch it', phone: 'A feather. Tap to catch it', xr: 'A feather. Reach out and catch it' },
+  hintBecome: { desktop: 'Look at him. Click him', phone: 'Look at him. Tap him', xr: 'Look at him' },
+  hintFlap: { desktop: 'Click to beat your wings', phone: 'Tap to beat your wings', xr: 'Beat your arms' },
 };
 
 // Perséfone: o jardim. `fruit` pode ser 'pomegranate' ou 'apple'.
+export const ORPHEUS = {
+  hintWalk: { desktop: 'Walk behind them: WASD, or click the ground', phone: 'Walk behind them: tap the ground', xr: 'Walk behind them' },
+  hintLyre: { desktop: 'Click the strings', phone: 'Tap the strings', xr: 'Touch the strings' },
+  hintEyes: 'He can feel you watching',
+  hintReach: { desktop: 'Click to reach for him', phone: 'Tap to reach for him', xr: 'Reach for him' },
+};
+
 export const PERSEPHONE = {
   fruit: 'pomegranate',
   enter: 'A garden with no winter in it. You have been here before.',
@@ -387,6 +398,7 @@ export const CREDITS = [
       'Rudolf Hausleithner — Beethoven’s Vision, 1882',
       'Caravaggio — Medusa, c. 1597',
       'Edward Burne-Jones — The Baleful Head, 1885',
+      'Peter Paul Rubens — Orpheus and Eurydice, 1636–38',
       'Walter Crane — The Fate of Persephone, 1877',
       'Peter Paul Rubens — The Rape of Proserpina, 1636–38',
       'Gustave Doré — Charon, Dante’s Inferno, 1861',

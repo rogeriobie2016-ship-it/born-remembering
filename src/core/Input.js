@@ -253,7 +253,7 @@ export class Input {
     }
     const xr = this.renderer.xr.isPresenting;
     this.renderer.domElement.style.cursor = this.mouseTarget ? 'pointer' : this.down ? 'grabbing' : 'grab';
-    const tip = xr ? null : this.capture ? 'throw' : (this.mouseTarget?.userData.interactive.tip ?? null);
+    const tip = xr ? null : this.capture ? 'throw' : this.walking ? 'stop' : (this.mouseTarget?.userData.interactive.tip ?? null);
     if (tip !== this.tipState || tip) {
       this.tipState = tip;
       this.onTip?.(tip, this.mouse?.x, this.mouse?.y);

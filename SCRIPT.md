@@ -100,10 +100,11 @@ Title in 3D: *We are born remembering, / but we learn to forget.*
 
 ## 3 · Icarus
 **Myth:** Daedalus and Icarus (Ovid, *Metamorphoses* VIII).
-**What happens:** you watch from the sky as father and son fly over an engraved Aegean, past islands, a lighthouse and fishermen who take them for gods. Icarus climbs toward the sun. Look at him and you become him: the wax gives, the feathers leave your arms, his father calls, and you fall.
+**What happens:** you watch from the sky as father and son fly over an engraved Aegean, past islands, a lighthouse and fishermen who take them for gods, with clouds in layers below and around you. Icarus climbs toward the sun; when you look at the sun it swells, hums, and he climbs faster. Look at him and you become him: each beat of your arms takes you higher, the wax runs, the feathers leave your arms, his father calls, and you fall through the clouds.
+**Interactions:** catch the feathers that fall past you (the ones you catch end up on your arms); part the clouds beside you; look at the sun and hurry him; beat your wings. On a flat screen: click a feather, click a cloud, look with the mouse, click to beat.
 **Paintings:**
-- Jacob Peter Gowy after Rubens, *The Fall of Icarus* (c. 1636): Daedalus and Icarus.
-- *The Fall of Icarus*, engraving (1730, Rijksmuseum): the fishing boat and the rock.
+- Jacob Peter Gowy after Rubens, *The Fall of Icarus* (c. 1636): Daedalus, with the wings Gowy painted, and Icarus.
+- *The Fall of Icarus*, engraving (1730, Rijksmuseum): the fishing boat and the rock, scissored out with a strip of bare paper.
 
 **Text:**
 - > "Icarus, I recommend thee to keep the middle tract; if thou shouldst go too low, the water should clog thy wings; if too high, the fire of the sun should scorch them." — *Metamorphoses* VIII
@@ -134,9 +135,11 @@ Title in 3D: *We are born remembering, / but we learn to forget.*
 
 ## 5 · Orpheus and Eurydice
 **Myth:** Orpheus leads Eurydice out of the underworld but must not look back (Ovid, *Metamorphoses* X).
-**What happens:** in a misty grove of the dead, Orpheus climbs toward the light, playing the lullaby your mother hummed. Eurydice follows. Near the threshold he turns, and their embrace is the instant he looks. You become Eurydice: you are drawn back into the dark, your hands close on air, and he grows small in the light. In that light the Muses appear, and Orpheus becomes Beethoven.
+**What happens:** you walk in a misty grove of the dead, behind Orpheus, who leads Eurydice toward the light playing the lullaby your mother hummed. He may not look back, and he can feel your eyes on them: hold him with your gaze and the lyre falters, and he turns. Their embrace is that instant. You become Eurydice: you are drawn back into the dark, you reach out, your hands close on air, and he grows small in the light. In that light the Muses appear, and Orpheus becomes Beethoven.
+**Interactions:** walk behind them (they wait for you, for a while); pluck the lyre on the stone (the mist thins, the trees lean, the mourners turn and come closer, and he holds on a little longer); look at them, or look away; reach for him.
 **Paintings:**
-- Camille Corot, *Orpheus Leading Eurydice from the Underworld* (1861): the grove all around you, and the two figures.
+- Camille Corot, *Orpheus Leading Eurydice from the Underworld* (1861): the grove all around you, its leaves in the crowns of the trees, its undergrowth, its mourners.
+- Peter Paul Rubens, *Orpheus and Eurydice* (1636–38): the two figures.
 - Frederic Leighton, *Orpheus and Eurydice* (1864): the embrace.
 - Rudolf Hausleithner, *Beethoven's Vision* (1882): the Muses, and Beethoven on his rock.
 

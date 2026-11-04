@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clampToArea, teleportArc, stepBody, throwVelocity } from '../src/core/walk.js';
+import { clampToArea, teleportArc, stepBody, throwVelocity, tapTarget, glideSpeed } from '../src/core/walk.js';
 import { wrapLines, paginate, MIN_PAGE_SECONDS } from '../src/core/captions.js';
 import * as content from '../src/content.js';
 
@@ -104,3 +104,20 @@ describe('subtitles', () => {
   });
 });
 
+describe('clicking the ground', () => {
+  it('goes to a near point', () => {
+    expect(tapTarget(0, 0, 1, 2, 4.5)).toEqual([1, 2]);
+  });
+
+  it('never takes you further than one reach, however far the click', () => {
+    const [x, z] = tapTarget(1, 1, 1, -99, 4.5);
+    expect(x).toBeCloseTo(1);
+    expect(z).toBeCloseTo(-3.5);
+  });
+
+  it('slows down into the last metre, and never stalls', () => {
+    expect(glideSpeed(5)).toBeCloseTo(1.8);
+    expect(glideSpeed(0.45)).toBeLessThan(1);
+    expect(glideSpeed(0.01)).toBeGreaterThan(0);
+  });
+});

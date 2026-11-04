@@ -111,8 +111,8 @@ export class CribScene extends BaseScene {
     const r = this.room;
     if (r.helmet) {
       r.helmet.visible = true;
-      r.helmet.material.opacity = 0;
-      this.tween(1.6, (k) => (r.helmet.material.opacity = k));
+      r.helmet.fade(0);
+      this.tween(1.6, (k) => r.helmet.fade(k));
     }
     this.sound('babbleFather', { parent: r.father.upper, volume: 0.7 });
     this.wait(0.4).then(() => this.sound('babbleMother2', { parent: r.mother.upper, volume: 0.6 }));

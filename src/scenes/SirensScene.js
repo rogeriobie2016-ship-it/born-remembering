@@ -196,7 +196,7 @@ export class SirensScene extends BaseScene {
     ctx.audio.define('siren-song', () => sirenSong());
 
     const [T] = await Promise.all([
-      loadArt('sirens', ['sirens-climbing', 'siren-rope', 'ulysses', 'harpy-left', 'harpy-a', 'harpy-b', 'harpy-right', 'harpy-mast']),
+      loadArt('sirens', ['sirens-climbing', 'siren-rope', 'ulysses', 'harpy-left', 'harpy-a', 'harpy-b', 'harpy-right']),
       ctx.audio.preload(['siren-song']),
     ]);
 
@@ -254,19 +254,13 @@ export class SirensScene extends BaseScene {
     this.roped = stand(T['siren-rope'], 2.6, 3.5, 0.45, -4.9);
 
     this.gold = softMaterial({ color: '#c9a24e', rim: '#fff2c4', rimPower: 1.4, rimStrength: 0.8, hatch: 0 });
-    // Waterhouse's bird-Sirens: painted medallions circling overhead
-    this.harpies = ['harpy-left', 'harpy-a', 'harpy-b', 'harpy-right', 'harpy-mast']
+    // Waterhouse's bird-Sirens, cut out of the painting, circling overhead.
+    const HARPY_HEIGHT = { 'harpy-left': 1.5, 'harpy-a': 0.85, 'harpy-b': 1.3, 'harpy-right': 2.3 };
+    this.harpies = Object.keys(HARPY_HEIGHT)
       .map((n, i) => {
         if (!T[n]) return null;
-        const m = cutout(T[n], 2.3, { anchor: 'center' });
-        m.material.depthWrite = false;
-        // a gilded oval frame: these are painted medallions, on purpose
-        const [w, hh] = m.userData.size;
-        const frame = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.025, 8, 64), this.gold);
-        frame.scale.set(w * 0.97, hh * 0.97, 1);
-        frame.raycast = () => {};
-        m.add(frame);
-        m.userData = { angle: (i / 5) * Math.PI * 2, radius: 5.5 + (i % 2) * 2, height: 3.4 + (i % 3) * 1.0, speed: 0.07 + i * 0.008 };
+        const m = cutout(T[n], HARPY_HEIGHT[n], { anchor: 'center' });
+        m.userData = { angle: (i / 4) * Math.PI * 2, radius: 5.5 + (i % 2) * 2, height: 3.4 + (i % 3) * 1.0, speed: 0.07 + i * 0.008, tilt: 0.1 + i * 0.03 };
         this.world.add(m);
         return m;
       })
@@ -422,6 +416,7 @@ export class SirensScene extends BaseScene {
       const a = u.angle + t * u.speed;
       h.position.set(Math.sin(a) * u.radius, u.height + Math.sin(t * 0.9 + a) * 0.25, -Math.cos(a) * u.radius - 4);
       h.lookAt(0, h.position.y, 0);
+      h.rotateZ(Math.sin(t * 1.3 + a) * u.tilt); // banking on the wind
     }
     this.songGlow.material.opacity *= 1;
 

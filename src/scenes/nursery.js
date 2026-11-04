@@ -34,14 +34,204 @@ const PAL = {
 };
 
 /** A giant adult hand + forearm. Fingers point +Y, palm faces +Z (local). */
+/**
+ * Hector's helmet, modelled: a Corinthian bronze with eye-holes and cheek-pieces, and the horsehair
+ * crest that frightened the child. Height about 0.55 m. `fade(k)` brings it in.
+ */
+export function buildHelmet() {
+  const group = new THREE.Group();
+  // The bronze is painted: hammered, darkened by age, its eyes and mouth cut out of the sheet with a clean edge.
+  const X = (u) => ((u / Math.PI + 1) / 2) * 1024;
+  const Y = (v) => v * 512;
+  const metal = paintedTexture(1024, 512, (c, w, h) => {
+    const g = c.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, '#a17a35');
+    g.addColorStop(0.42, '#7d5a24');
+    g.addColorStop(0.75, '#5e421a');
+    g.addColorStop(1, '#3f2c12');
+    c.fillStyle = g;
+    c.fillRect(0, 0, w, h);
+    for (let i = 0; i < 2600; i++) {
+      const light = i % 3 === 0;
+      c.fillStyle = light ? `rgba(226,186,110,${0.04 + Math.random() * 0.09})` : `rgba(26,16,6,${0.04 + Math.random() * 0.1})`;
+      c.beginPath();
+      c.ellipse(Math.random() * w, Math.random() * h, 3 + Math.random() * 9, 2 + Math.random() * 5, Math.random() * 3, 0, Math.PI * 2);
+      c.fill();
+    }
+    for (let i = 0; i < 90; i++) {
+      c.fillStyle = `rgba(74,128,104,${0.03 + Math.random() * 0.08})`; // verdigris
+      c.beginPath();
+      c.ellipse(Math.random() * w, h * (0.35 + Math.random() * 0.65), 8 + Math.random() * 26, 4 + Math.random() * 12, Math.random() * 3, 0, Math.PI * 2);
+      c.fill();
+    }
+    // the openings
+    const path = () => {
+      c.beginPath();
+      // left eye, nose-guard, right eye, down to the mouth
+      c.moveTo(X(-0.1), Y(0.56));
+      c.bezierCurveTo(X(-0.2), Y(0.6), X(-0.62), Y(0.58), X(-0.74), Y(0.47));
+      c.bezierCurveTo(X(-0.56), Y(0.42), X(-0.2), Y(0.42), X(-0.1), Y(0.47));
+      c.closePath();
+      c.moveTo(X(0.1), Y(0.56));
+      c.bezierCurveTo(X(0.2), Y(0.6), X(0.62), Y(0.58), X(0.74), Y(0.47));
+      c.bezierCurveTo(X(0.56), Y(0.42), X(0.2), Y(0.42), X(0.1), Y(0.47));
+      c.closePath();
+      c.moveTo(X(-0.1), Y(0.58));
+      c.lineTo(X(-0.28), Y(1.02));
+      c.lineTo(X(0.28), Y(1.02));
+      c.lineTo(X(0.1), Y(0.58));
+      c.bezierCurveTo(X(0.05), Y(0.62), X(-0.05), Y(0.62), X(-0.1), Y(0.58));
+      c.closePath();
+    };
+    // an incised line following them, as the smith would leave it
+    path();
+    c.lineWidth = 12;
+    c.strokeStyle = 'rgba(214,170,90,0.55)';
+    c.stroke();
+    path();
+    c.lineWidth = 7;
+    c.strokeStyle = 'rgba(32,20,8,0.75)';
+    c.stroke();
+    c.globalCompositeOperation = 'destination-out';
+    path();
+    c.fillStyle = '#000';
+    c.fill();
+    c.globalCompositeOperation = 'source-over';
+  });
+  metal.anisotropy = 8;
+  const bronze = new THREE.MeshLambertMaterial({ map: metal, side: THREE.FrontSide, alphaTest: 0.5, transparent: true });
+  const fittings = softMaterial({ color: '#94702f', rim: '#ffe6b0', rimPower: 1.5, rimStrength: 0.7, hatch: 0, umber: '#2e1e0c', side: THREE.DoubleSide, transparent: true });
+  const inner = new THREE.MeshBasicMaterial({ map: metal, color: '#000000', alphaTest: 0.5, side: THREE.BackSide, transparent: true });
+  const H = 0.36;
+  const R = 0.13;
+  const COLS = 64;
+  const ROWS = 30;
+  const DOME = 0.45;
+  const yDome = H * (1 - DOME);
+  const pos = [];
+  const uvs = [];
+  const index = [];
+  for (let j = 0; j <= ROWS; j++) {
+    const v = j / ROWS;
+    const inDome = v < DOME;
+    const th = (Math.PI / 2) * (v / DOME);
+    const k0 = (v - DOME) / (1 - DOME);
+    const r = inDome ? R * Math.sin(th) : R * (1 - 0.1 * Math.sin(Math.PI * Math.min(1, k0 * 1.25)) + 0.1 * k0 * k0);
+    const y = inDome ? yDome + (H - yDome) * Math.cos(th) : H * (1 - v);
+    for (let i = 0; i <= COLS; i++) {
+      const u = (i / COLS) * Math.PI * 2 - Math.PI;
+      // the cheek-pieces come forward and in, toward the chin
+      const k = Math.max(0, (v - 0.55) / 0.45);
+      const front = Math.max(0, Math.cos(u));
+      pos.push(Math.sin(u) * r * (1 - 0.14 * k * front), y - 0.03 * k * k * front, Math.cos(u) * r * (1.12 + 0.2 * k * front));
+      uvs.push(i / COLS, 1 - v);
+    }
+  }
+  for (let j = 0; j < ROWS; j++) {
+    for (let i = 0; i < COLS; i++) {
+      const a = j * (COLS + 1) + i;
+      const b = a + COLS + 1;
+      index.push(a, b, a + 1, a + 1, b, b + 1);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(index);
+  geo.computeVertexNormals();
+  const shell = new THREE.Mesh(geo, bronze);
+  const lining = new THREE.Mesh(geo, inner);
+  lining.scale.setScalar(0.99);
+  group.add(shell, lining);
+
+  // a brow ridge, and the crest's bronze holder
+  const brow = new THREE.Mesh(new THREE.TorusGeometry(R * 1.02, 0.0045, 6, 64), fittings);
+  brow.rotation.x = Math.PI / 2;
+  brow.scale.set(1, 1.12, 1);
+  brow.position.y = H * 0.585;
+  group.add(brow);
+
+  // the crest: horsehair, on an arc from brow to nape
+  const hair = paintedTexture(512, 128, (c, w, h) => {
+    c.fillStyle = '#7c1f18';
+    c.fillRect(0, 0, w, h);
+    for (let i = 0; i < 900; i++) {
+      c.strokeStyle = ['#a8342a', '#57130e', '#c4563c', '#3f0d0a'][i % 4];
+      c.lineWidth = 0.6 + Math.random() * 1.4;
+      const x = Math.random() * w;
+      c.beginPath();
+      c.moveTo(x, h);
+      c.quadraticCurveTo(x + (Math.random() - 0.5) * 18, h * 0.5, x + (Math.random() - 0.5) * 26, 0);
+      c.stroke();
+    }
+  });
+  const hairMat = new THREE.MeshLambertMaterial({ map: hair, side: THREE.DoubleSide, transparent: true, emissive: '#3a0d0a' });
+  const cy = H - 0.16;
+  const arc = (t, r) => [cy + Math.cos(t) * r, Math.sin(t) * r];
+  const STEPS = 40;
+  const P = [];
+  const UV = [];
+  const I = [];
+  const t0 = 1.5;
+  const t1 = -2.15;
+  for (let n = 0; n <= STEPS; n++) {
+    const k = n / STEPS;
+    const t = t0 + (t1 - t0) * k;
+    const swell = Math.sin(Math.PI * Math.min(1, k * 1.04));
+    const r0 = 0.142;
+    const r1 = r0 + 0.035 + 0.135 * swell;
+    const halfW = 0.004 + 0.021 * swell;
+    const [y0, z0] = arc(t, r0);
+    const [y1, z1] = arc(t, r1);
+    // a wedge: thin at the root, full at the top, and a rounded back
+    for (const [x, y, z, v] of [[0, y0, z0, 0], [-halfW, y1, z1, 0.92], [0, y1 + (y1 - cy) * 0.03, z1 + (z1 - 0) * 0.03, 1], [halfW, y1, z1, 0.92]]) {
+      P.push(x, y, z);
+      UV.push(k * 2, v);
+    }
+  }
+  for (let n = 0; n < STEPS; n++) {
+    const a = n * 4;
+    for (const [p, q] of [[0, 1], [1, 2], [2, 3], [3, 0]]) I.push(a + p, a + 4 + p, a + q, a + q, a + 4 + p, a + 4 + q);
+  }
+  const crestGeo = new THREE.BufferGeometry();
+  crestGeo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
+  crestGeo.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2));
+  crestGeo.setIndex(I);
+  crestGeo.computeVertexNormals();
+  hair.wrapS = THREE.RepeatWrapping;
+  group.add(new THREE.Mesh(crestGeo, hairMat));
+
+  const holderPts = [];
+  for (let n = 0; n <= 16; n++) {
+    const t = t0 + ((t1 - t0) * n) / 16;
+    const [y, z] = arc(t, 0.143);
+    holderPts.push(new THREE.Vector3(0, y, z));
+  }
+  group.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(holderPts), 40, 0.007, 6), fittings));
+
+  const shadow = groundShadow(0.8);
+  group.add(shadow);
+  const baseOpacity = shadow.material.opacity;
+  group.traverse((o) => (o.raycast = () => {}));
+  const mats = [bronze, fittings, inner, hairMat];
+  group.fade = (k) => {
+    for (const m of mats) {
+      m.opacity = k;
+      m.depthWrite = k > 0.98;
+    }
+    shadow.material.opacity = baseOpacity * k;
+  };
+  return group;
+}
+
 export class GiantHand extends THREE.Group {
-  constructor({ side = 1, skin = '#e8c2a4', sleeve = '#b98b8b', scale = 2.2 } = {}) {
+  constructor({ side = 1, skin = '#e8c2a4', sleeve = '#b98b8b', scale = 2.2, plain = false } = {}) {
     super();
     this.curl = 0.15;
     this.targetCurl = 0.15;
     // Skin glows red-orange at the edges, like a hand held up to the light.
     // fine lines on skin: at hand scale, coarse hatching would read as a net, not as shading
-    const skinMat = softMaterial({ color: skin, rim: '#ffc4a0', rimPower: 2.6, rimStrength: 0.3, hatch: 190, umber: '#8a5a40' });
+    const skinMat = softMaterial({ color: skin, rim: '#ffc4a0', rimPower: 2.6, rimStrength: 0.3, hatch: plain ? 0 : 190, umber: '#8a5a40' });
     this.skinMat = skinMat;
     const palm = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), skinMat); // children[0]: the skin
     palm.scale.set(0.047, 0.056, 0.019);
@@ -85,7 +275,7 @@ export class GiantHand extends THREE.Group {
     const wrist = new THREE.Mesh(new THREE.CylinderGeometry(0.029, 0.034, 0.09, 20), skinMat);
     wrist.position.y = -0.075;
     this.add(wrist);
-    const sleeveMat = softMaterial({ color: sleeve, rim: '#fff0dc', rimPower: 1.8, rimStrength: 0.35, hatch: 220 });
+    const sleeveMat = softMaterial({ color: sleeve, rim: '#fff0dc', rimPower: 1.8, rimStrength: 0.35, hatch: plain ? 0 : 220 });
     const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.038, 0.5, 6, 20), sleeveMat);
     arm.position.y = -0.36;
     const cuff = new THREE.Mesh(new THREE.TorusGeometry(0.037, 0.008, 8, 24), sleeveMat);
@@ -187,7 +377,7 @@ export class Adult extends THREE.Group {
 /** Paintings used in the room (loaded once, shared by every nursery scene). */
 let _art = null;
 export function nurseryArt() {
-  return (_art ||= loadArt('crib', ['hector', 'andromache-face', 'helmet', 'amphora', 'hayez', 'fright', 'troy-view']));
+  return (_art ||= loadArt('crib', ['hector', 'andromache-face', 'amphora', 'hayez', 'fright', 'troy-view']));
 }
 
 /**
@@ -748,14 +938,13 @@ export function buildNursery(art = {}) {
   father.position.set(art.hector ? -1.15 : -1.5, 0, art.hector ? -2.0 : -2.4);
   father.rotation.y = 0.55;
   // Hector's helmet, laid on the ground once the child has cried at it (Iliad VI)
-  let helmet = null;
-  if (art.helmet) {
-    helmet = cutout(art.helmet, 0.55);
-    helmet.position.set(-0.85, 0.01, -1.55);
-    helmet.lookAt(0, 0.3, 0);
-    helmet.visible = false;
-    group.add(helmet);
-  }
+  const helmet = buildHelmet();
+  helmet.position.set(-0.85, 0.01, -1.55);
+  helmet.lookAt(0, 0.01, 0);
+  helmet.rotateZ(0.13); // set down, not displayed
+  helmet.scale.setScalar(1.3);
+  helmet.visible = false;
+  group.add(helmet);
   group.add(mother, father);
   const motherHand = new GiantHand({ side: -1, sleeve: '#b98b8b' });
   const fatherHand = new GiantHand({ side: 1, sleeve: '#7d8a99', skin: '#dcb394' });

@@ -5,6 +5,7 @@ import { ease, lerp } from '../core/util.js';
 import { thump } from '../core/synth.js';
 import { softMaterial, inkOutlineAll, paintedTexture } from '../core/look.js';
 import { engravedSky } from '../core/engraved.js';
+import { figTree } from '../core/grove.js';
 import { loadArt, cutout, groundShadow, cartouche, ScrollWriter } from '../core/collage.js';
 
 // Scene 0 — the Sphinx (Apollodorus, Library III). The threshold, and the onboarding.
@@ -38,7 +39,7 @@ export class SphinxScene extends BaseScene {
     ctx.grain.set({ grain: 0.06, vignette: 0.45, color: '#0d1210' });
     ctx.haze.set({ amount: 0.1, color: '#2a3634', saturate: 0.95, blur: 0 });
 
-    const [T] = await Promise.all([loadArt('sphinx', ['sphinx', 'gorge', 'rock', 'figtree']), ctx.audio.preload(['moonlight', 'thump'])]);
+    const [T] = await Promise.all([loadArt('sphinx', ['sphinx', 'gorge', 'rock']), ctx.audio.preload(['moonlight', 'thump'])]);
     this.art = T;
 
     // ---------- Moreau's sky, all around ----------
@@ -140,12 +141,10 @@ export class SphinxScene extends BaseScene {
     this.add(col);
 
     // Moreau's fig tree at the edge of the ledge
-    if (T.figtree) {
-      const fig = cutout(T.figtree, 1.5);
-      fig.position.set(-1.75, 0, -3.3);
-      fig.lookAt(0, 0.75, 0);
-      this.add(fig);
-    }
+    const fig = figTree();
+    fig.position.set(-2.3, 0, -3.4);
+    fig.add(groundShadow(1.6));
+    this.add(fig);
 
     // ---------- the Sphinx and Oedipus ----------
     this.pair = new THREE.Group();
@@ -172,6 +171,7 @@ export class SphinxScene extends BaseScene {
       blockers: [
         { x: LEDGE.x, z: LEDGE.z, r: 1.55, top: LEDGE.y }, // the rock (loose things can land on top)
         { x: 1.65, z: -3.9, r: 0.32 }, // the column
+        { x: -2.3, z: -3.4, r: 0.3 }, // the fig tree
       ],
     };
 

@@ -7,6 +7,7 @@ import { softMaterial, paintedTexture, lightShaftMaterial, bindShaft } from '../
 import { engravedSky } from '../core/engraved.js';
 import { loadArt, cutout, groundShadow } from '../core/collage.js';
 import { crunch, leavesWind, birds, rustle, quake } from '../core/ambience.js';
+import { trunkGeometry, crownGeometry, crownMaterial } from '../core/grove.js';
 import { thump } from '../core/synth.js';
 
 // A past life — Persephone (Homeric Hymn to Demeter). A garden you can walk in.
@@ -32,125 +33,6 @@ const FRUITS = {
   pomegranate: { skin: '#8f1c26', dark: '#4e0e16', blush: '#d0683e', crown: '#8a6230', squash: 0.92 },
   apple: { skin: '#a82a20', dark: '#6a1612', blush: '#d9a044', crown: '#4a3a20', squash: 0.98 },
 };
-
-/** A bent trunk, flared at the root, and three limbs going up into the crown. */
-function trunkGeometry(seed) {
-  const parts = [];
-  const add = (h, r0, r1, bend, tilt, y, yaw) => {
-    const g = new THREE.CylinderGeometry(r0, r1, h, 9, 6);
-    g.translate(0, h / 2, 0);
-    const p = g.attributes.position;
-    for (let i = 0; i < p.count; i++) {
-      const v = p.getY(i);
-      const a = Math.atan2(p.getZ(i), p.getX(i));
-      const flare = 1 + Math.max(0, 0.35 - v) * 2.2 * (1 + 0.4 * Math.sin(a * 5 + seed));
-      p.setX(i, p.getX(i) * flare + Math.sin(v * 1.3 + seed) * bend);
-      p.setZ(i, p.getZ(i) * flare + Math.cos(v * 0.9 + seed * 2) * bend * 0.6);
-    }
-    g.rotateZ(tilt);
-    g.rotateY(yaw);
-    g.translate(0, y, 0);
-    parts.push(g.toNonIndexed());
-  };
-  add(2.7, 0.055, 0.1, 0.07, 0, 0, seed);
-  add(1.3, 0.018, 0.05, 0.05, 0.7, 1.65, seed * 2.1);
-  add(1.2, 0.018, 0.05, 0.05, -0.8, 1.85, seed * 2.1);
-  add(1.1, 0.016, 0.04, 0.04, 0.6, 2.05, seed * 3.7);
-  const merged = mergeGeometries(parts);
-  merged.computeVertexNormals();
-  return merged;
-}
-
-/**
- * A crown of painted clumps that always face you: Botticelli's leaves, laid in the atlas.
- * `position` is each clump's centre; `corner` opens the card in view space.
- */
-function crownGeometry(seed, count = 24) {
-  const rnd = (() => {
-    let a = seed * 9301 + 49297;
-    return () => (a = (a * 9301 + 49297) % 233280) / 233280;
-  })();
-  const pos = [];
-  const corner = [];
-  const uv = [];
-  const shade = [];
-  const index = [];
-  for (let i = 0; i < count; i++) {
-    const th = rnd() * Math.PI * 2;
-    const ph = Math.acos(rnd() * 1.5 - 0.5); // mostly the upper part of the ball
-    const r = 0.35 + rnd() * 0.85;
-    const x = Math.sin(ph) * Math.cos(th) * r * 1.35;
-    const y = 2.9 + Math.cos(ph) * r * 0.95;
-    const z = Math.sin(ph) * Math.sin(th) * r * 1.35;
-    const half = 0.6 + rnd() * 0.32;
-    const turn = rnd() * Math.PI * 2;
-    const cell = Math.floor(rnd() * 16);
-    const u0 = (cell % 4) / 4;
-    const v0 = 1 - (Math.floor(cell / 4) + 1) / 4;
-    const lit = clamp(0.5 + (y - 2.2) * 0.3 + (x > 0 ? -0.04 : 0.06) + rnd() * 0.1, 0.5, 1.12);
-    const base = pos.length / 3;
-    for (const [cx, cy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
-      pos.push(x, y, z);
-      corner.push((cx * Math.cos(turn) - cy * Math.sin(turn)) * half, (cx * Math.sin(turn) + cy * Math.cos(turn)) * half);
-      uv.push(u0 + ((cx + 1) / 2) * 0.25, v0 + ((cy + 1) / 2) * 0.25);
-      shade.push(lit);
-    }
-    index.push(base, base + 1, base + 2, base, base + 2, base + 3);
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  g.setAttribute('corner', new THREE.Float32BufferAttribute(corner, 2));
-  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-  g.setAttribute('shade', new THREE.Float32BufferAttribute(shade, 1));
-  g.setIndex(index);
-  g.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 2.9, 0), 2.8);
-  return g;
-}
-
-function crownMaterial(map) {
-  return new THREE.ShaderMaterial({
-    uniforms: {
-      map: { value: map },
-      tint: { value: new THREE.Color('#ffffff') },
-      fogColor: { value: new THREE.Color(DAWN.fog) },
-      fogNear: { value: 16 },
-      fogFar: { value: 44 },
-    },
-    side: THREE.DoubleSide,
-    vertexShader: /* glsl */ `
-      attribute vec2 corner;
-      attribute float shade;
-      varying vec2 vUv;
-      varying float vShade;
-      varying float vDepth;
-      void main() {
-        vUv = uv;
-        vShade = shade;
-        vec4 mv = modelViewMatrix * vec4(position, 1.0);
-        float scale = length(modelViewMatrix[0].xyz);
-        mv.xy += corner * scale;
-        vDepth = -mv.z;
-        gl_Position = projectionMatrix * mv;
-      }`,
-    fragmentShader: /* glsl */ `
-      uniform sampler2D map;
-      uniform vec3 tint;
-      uniform vec3 fogColor;
-      uniform float fogNear;
-      uniform float fogFar;
-      varying vec2 vUv;
-      varying float vShade;
-      varying float vDepth;
-      void main() {
-        vec4 c = texture2D(map, vUv);
-        if (c.a < 0.5) discard;
-        vec3 col = c.rgb * vShade * tint;
-        col = mix(col, fogColor, smoothstep(fogNear, fogFar, vDepth));
-        gl_FragColor = vec4(col, 1.0);
-        #include <colorspace_fragment>
-      }`,
-  });
-}
 
 function fruitGeometry(kind) {
   const f = FRUITS[kind] || FRUITS.pomegranate;
@@ -301,7 +183,7 @@ export class PersephoneScene extends BaseScene {
       bark.repeat.set(2, 1.5);
     }
     const barks = new THREE.MeshLambertMaterial({ map: bark || null, color: bark ? '#ffffff' : '#3a2a1e' });
-    const leaves = crownMaterial(T['grove-crown']);
+    const leaves = crownMaterial(T['grove-crown'], { fogColor: DAWN.fog });
     this.barkMat = barks;
     this.leafMat = leaves;
     const trunks = [trunkGeometry(1), trunkGeometry(2.4), trunkGeometry(3.7)];
@@ -503,7 +385,6 @@ export class PersephoneScene extends BaseScene {
     // the chariot, waiting under the ground
     if (T.rapture) {
       this.rapture = cutout(T.rapture, 3.3);
-      this.rapture.material.depthWrite = true;
       this.rapture.position.copy(RUMBLE).setY(-3.6);
       this.rapture.visible = false;
       this.add(this.rapture);

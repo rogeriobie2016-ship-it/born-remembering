@@ -1,8 +1,10 @@
 import * as THREE from 'three';
-import { clampToArea, teleportArc } from './walk.js';
+import { clampToArea, teleportArc, tapTarget, glideSpeed } from './walk.js';
 
 const WALK_SPEED = 1.7; // metres per second (WASD, smooth walking)
-const TAP_SPEED = 2.2; // gliding to a tapped point
+const TAP_REACH = 4.5; // one click takes you at most this far: a click near the horizon is not a journey
+const STUCK_AFTER = 0.3; // seconds without getting closer (a tree in the way): give up and stand still
+const STICK_DEAD = 0.22;
 const SNAP_ANGLE = Math.PI / 6;
 const STICK_ON = 0.7;
 const STICK_OFF = 0.3;
@@ -102,10 +104,22 @@ export class Locomotion {
     scene.add(this.beads, this.marker);
 
     window.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        this.stop(); // the system may swallow the key's release
+        return;
+      }
       if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft'].includes(e.code)) this.keys.add(e.code);
+      if (e.code === 'Escape') this.stop();
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
-    window.addEventListener('blur', () => this.keys.clear());
+    window.addEventListener('blur', () => this.stop());
+    document.addEventListener('visibilitychange', () => this.stop());
+    // A click always means "stop" first. It also frees keys whose release got lost.
+    renderer.domElement.addEventListener('pointerdown', () => {
+      this.swallowTap = !!this.dest;
+      this.stop();
+    });
+    window.addEventListener('pointerup', () => setTimeout(() => (this.swallowTap = false), 0));
 
     input.onGroundTap = (ray) => this._tapGround(ray);
     for (const s of input.controllers) {
@@ -130,13 +144,21 @@ export class Locomotion {
     return this.renderer.xr.isPresenting;
   }
 
+  /** Stand still, now. */
+  stop() {
+    this.keys.clear();
+    this.vel.set(0, 0);
+    this.dest = null;
+    this.stuck = 0;
+    this.input.walking = false;
+    if (!this.aiming) this.marker.visible = false;
+  }
+
   /** Called by the scene manager: the new scene's walkable area, or null. */
   setArea(area) {
     this.area = area;
     this.look.wasdLook = !area;
-    this.vel.set(0, 0);
-    this.dest = null;
-    this.keys.clear();
+    this.stop();
     this._stopAiming();
     this.input.groundTapEnabled = !!area;
   }
@@ -165,12 +187,17 @@ export class Locomotion {
   }
 
   _tapGround(ray) {
-    if (!this.area || this.xr) return;
+    if (!this.area || this.xr || this.swallowTap) return;
     const floor = this.area.floorY ?? 0;
     if (ray.direction.y >= -0.02) return;
     ray.at((floor - ray.origin.y) / ray.direction.y, _p);
-    const [x, z] = clampToArea(this.area, _p.x, _p.z);
+    const h = this._headWorld();
+    const [tx, tz] = tapTarget(h.x, h.z, _p.x, _p.z, TAP_REACH);
+    const [x, z] = clampToArea(this.area, tx, tz);
     this.dest = new THREE.Vector2(x, z);
+    this.stuck = 0;
+    this.closest = Infinity;
+    this.input.walking = true;
     this._showMarker(x, floor, z);
   }
 
@@ -309,8 +336,8 @@ export class Locomotion {
         } else if (Math.abs(x) < STICK_OFF) this.snapReady[i] = true;
       }
       if (!right && this.prefs.smooth) {
-        moveX = Math.abs(x) > 0.15 ? x : 0;
-        moveY = Math.abs(y) > 0.15 ? y : 0;
+        moveX = Math.abs(x) > STICK_DEAD ? x : 0;
+        moveY = Math.abs(y) > STICK_DEAD ? y : 0;
       } else {
         // push forward to aim, let go to land
         if (y < -STICK_ON && !this.aiming) {
@@ -353,21 +380,25 @@ export class Locomotion {
     const e = Math.min(1, dt * 9);
     this.vel.x += (vx - this.vel.x) * e;
     this.vel.y += (vz - this.vel.y) * e;
-    if (want) this.dest = null;
+    if (want && this.dest) {
+      this.dest = null;
+      this.input.walking = false;
+    }
 
     const h = this._headWorld();
     if (this.dest) {
       const dx = this.dest.x - h.x;
       const dz = this.dest.y - h.z;
       const d = Math.hypot(dx, dz);
-      if (d < 0.05) {
-        this.dest = null;
-        this.marker.visible = false;
+      this.stuck = d < this.closest - 0.002 ? 0 : (this.stuck || 0) + dt;
+      this.closest = Math.min(this.closest, d);
+      if (d < 0.05 || this.stuck > STUCK_AFTER) {
+        this.stop();
       } else {
-        const stepLen = Math.min(d, TAP_SPEED * dt);
+        const stepLen = Math.min(d, glideSpeed(d) * dt);
         this._moveHeadTo(h.x + (dx / d) * stepLen, h.z + (dz / d) * stepLen);
       }
-    } else if (Math.hypot(this.vel.x, this.vel.y) > 0.002) {
+    } else if (Math.hypot(this.vel.x, this.vel.y) > 0.01) {
       this._moveHeadTo(h.x + this.vel.x * dt, h.z + this.vel.y * dt);
     }
     this._updateGroundHover();

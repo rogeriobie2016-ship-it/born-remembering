@@ -18,7 +18,7 @@ export async function loadArt(dir, names) {
             base + n + '.webp',
             (t) => {
               t.colorSpace = THREE.SRGBColorSpace;
-              t.anisotropy = 4;
+              t.anisotropy = 8;
               resolve(t);
             },
             undefined,
@@ -31,15 +31,43 @@ export async function loadArt(dir, names) {
 }
 
 /**
- * A figure cut out of a painting: a plane `height` tall.
- * `anchor` 'feet' stands it on its base; 'center' centres it (flying figures).
+ * The light on a cut-out: part of it is the scene's, so a figure belongs where it stands; part is the
+ * paint's own, so a dim scene never turns a painting to mud. Multiplied at the end for premultiplied blending
+ * (`premultipliedAlpha`). The export bleeds colour past the mask, so filtered edges carry no halo.
  */
-export function cutout(tex, height, { anchor = 'feet' } = {}) {
+function paintedLight(mat, self) {
+  mat.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <opaque_fragment>',
+      `outgoingLight = mix(min(outgoingLight * 1.7, diffuseColor.rgb * 1.25), diffuseColor.rgb, ${self.toFixed(2)});
+       #include <opaque_fragment>`,
+    );
+  };
+  mat.customProgramCacheKey = () => `cutout-${self.toFixed(2)}`;
+  return mat;
+}
+
+/**
+ * A figure cut out of a painting. `height` tall, slightly bowed like a sheet of card: that gives it real
+ * parallax in the headset and lets the light roll across it.
+ * `anchor` 'feet' stands it on its base; 'center' centres it (flying figures).
+ * `self` 0..1: how much of its colour ignores the scene's light. `bow`: depth of the curve, as a share of its width.
+ */
+export function cutout(tex, height, { anchor = 'feet', self = 0.55, bow = 0.07 } = {}) {
   const img = tex.image;
   const w = height * (img.width / img.height);
-  const geo = new THREE.PlaneGeometry(w, height);
+  const geo = new THREE.PlaneGeometry(w, height, 10, 1);
+  const p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const u = (p.getX(i) / w) * 2;
+    p.setZ(i, (1 - u * u) * bow * w);
+  }
+  geo.computeVertexNormals();
   if (anchor === 'feet') geo.translate(0, height / 2, 0);
-  const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, alphaTest: 0.05, side: THREE.DoubleSide, depthWrite: true });
+  const mat = paintedLight(
+    new THREE.MeshLambertMaterial({ map: tex, transparent: true, alphaTest: 0.02, side: THREE.DoubleSide, depthWrite: false, premultipliedAlpha: true }),
+    self,
+  );
   const m = new THREE.Mesh(geo, mat);
   m.userData.size = [w, height];
   m.raycast = () => {};
