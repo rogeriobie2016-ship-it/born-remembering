@@ -81,7 +81,7 @@ Scenes that set `walkArea` can be walked in (today: the Sphinx). The others keep
 |---|---|---|---|
 | **Quest controllers** | Walk for real; push a stick forward to aim, let go to teleport (or hold the trigger on empty space). Smooth walking on the left stick if turned on | Right stick: 30° steps | Grip or trigger near it; point from afar and it flies to you. Let go to throw |
 | **Quest hands** | Walk for real; pinch on empty space, hold, let go to teleport | Your body | Pinch |
-| **Desktop** | WASD (Shift runs) | Drag, arrow keys | Click to hold, click again to throw |
+| **Desktop** | WASD (Shift runs), or click the ground | Drag, arrow keys | Click to hold (it follows the mouse), click again to throw |
 | **Phone** | Tap the ground | Move the phone, drag | Tap to hold, tap again to throw |
 
 Left controller in the headset: **X** smooth walking on/off, **Y** subtitles on/off. Both are also in the menu.

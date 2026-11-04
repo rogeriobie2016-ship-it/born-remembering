@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { disposeObject } from './util.js';
+import { disposeObject, forPlatform } from './util.js';
 import { Subtitle } from './Subtitle.js';
 
 /**
@@ -75,10 +75,12 @@ export class BaseScene {
 
   /**
    * A line of narration: a small subtitle that follows your gaze, plus the voice.
-   * `narrate: false` for instructions, which are read but not spoken. Resolves when it has been said.
+   * `narrate: false` for instructions, which are read but not spoken; those can be
+   * { desktop, phone, xr }. Resolves when it has been said.
    */
-  say(text, { hold, narrate = true, force = false } = {}) {
+  say(line, { hold, narrate = true, force = false } = {}) {
     const { ctx } = this;
+    const text = forPlatform(line, ctx.platform());
     if (!this.subtitle) this.subtitle = this.add(new Subtitle(ctx.camera, { prefs: ctx.prefs, isXR: () => ctx.renderer.xr.isPresenting }));
     const speech = narrate ? ctx.narrator.speak(text) : null;
     return this.subtitle.show(this, text, { speech, hold, force });

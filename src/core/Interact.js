@@ -7,6 +7,7 @@ const REACH = 0.07; // how far past an object's radius a hand can grab it
 const PULL_TIME = 0.22; // a far object flies to your hand this fast
 const SAMPLES = 6;
 const FLAT_HOLD = new THREE.Vector3(0.12, -0.16, -0.55);
+const FLAT_REACH = 0.75;
 const FLAT_THROW = 4.2;
 const LOST_RANGE = 70;
 
@@ -100,6 +101,7 @@ export class Interact {
     obj.add(proxy);
     this.input.add(obj, {
       dwell: false,
+      tip: 'pick',
       onSelect: () => {
         if (!this.xr) this._flatToggle(b);
       },
@@ -113,6 +115,7 @@ export class Interact {
     this.touches.set(obj, t);
     this.input.add(obj, {
       dwell: false,
+      tip: 'touch',
       onSelect: () => this._touch(t, null), // a click, a tap, or a ray and trigger from afar
     });
     return obj;
@@ -307,7 +310,10 @@ export class Interact {
   _flatThrow() {
     const b = this.flatHeld;
     this._flatLetGo();
-    this.camera.getWorldDirection(_a);
+    // toward the pointer if there is a mouse, else where you are looking
+    const ray = this.input.mouseRay();
+    if (ray) _a.copy(ray.direction);
+    else this.camera.getWorldDirection(_a);
     b.vx = _a.x * FLAT_THROW;
     b.vy = _a.y * FLAT_THROW + 1.4;
     b.vz = _a.z * FLAT_THROW;
@@ -323,7 +329,10 @@ export class Interact {
 
     const f = this.flatHeld;
     if (f) {
-      _a.copy(FLAT_HOLD).applyQuaternion(this.camera.getWorldQuaternion(_q)).add(this.camera.getWorldPosition(_b));
+      // it follows the mouse; on a phone it sits low in the view
+      const ray = this.input.mouseRay();
+      if (ray) ray.at(FLAT_REACH, _a);
+      else _a.copy(FLAT_HOLD).applyQuaternion(this.camera.getWorldQuaternion(_q)).add(this.camera.getWorldPosition(_b));
       f.obj.position.lerp(f.obj.parent.worldToLocal(_a), Math.min(1, dt * 12));
       f.obj.rotateY(dt * 0.5);
     }

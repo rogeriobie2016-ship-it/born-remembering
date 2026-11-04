@@ -1,6 +1,7 @@
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 
 const $ = (id) => document.getElementById(id);
+const CONTROLS_SECONDS = 9;
 
 /**
  * HTML layer: title screen (scene 0), the in-experience menu (pause, chapters,
@@ -10,14 +11,14 @@ const $ = (id) => document.getElementById(id);
  *   onPause(paused)    the menu opened / closed
  *   onRestart()
  */
-export function setupUI({ content, renderer, audio, narrator, look, prefs, isMobile, xrReady, onBegin, onPause, onRestart }) {
+export function setupUI({ content, renderer, audio, narrator, look, prefs, isMobile, platform, xrReady, onBegin, onPause, onRestart }) {
   const { UI, TITLE, CHAPTERS, CREDITS } = content;
   let started = false;
 
   $('title-text').textContent = TITLE;
   $('subtitle-text').textContent = UI.subtitle;
   $('headphones-text').textContent = UI.headphones;
-  $('howto-text').textContent = UI.howTo;
+  $('howto-text').textContent = UI.howTo[platform()];
   $('menu-title').textContent = TITLE;
   $('chapters-title').textContent = UI.chapters;
   $('credits-title').textContent = UI.credits;
@@ -189,7 +190,33 @@ export function setupUI({ content, renderer, audio, narrator, look, prefs, isMob
     });
   }
 
+  let controlsTimer = 0;
+  const tipEl = $('tip');
+  const controlsEl = $('controls-hint');
+
   return {
+    /** The small guide at the bottom of a flat screen, for a few seconds in each scene. */
+    showControls(walkable, none) {
+      clearTimeout(controlsTimer);
+      const kind = platform();
+      const text = none || kind === 'xr' ? '' : UI.controls[walkable ? 'walk' : 'still'][kind];
+      controlsEl.textContent = text;
+      controlsEl.classList.toggle('shown', !!text);
+      if (text) controlsTimer = setTimeout(() => controlsEl.classList.remove('shown'), CONTROLS_SECONDS * 1000);
+    },
+    /** Beside the mouse pointer; with no mouse (a phone holding something), low on the screen. */
+    setTip(key, x, y) {
+      const text = !key ? '' : key === 'throw' ? UI.tipThrow[platform()] : UI.tips[key];
+      if (!text || platform() === 'xr') {
+        tipEl.classList.remove('shown');
+        return;
+      }
+      tipEl.textContent = text;
+      tipEl.classList.add('shown');
+      tipEl.classList.toggle('docked', x === undefined);
+      if (x !== undefined) tipEl.style.transform = `translate(${x + 16}px, ${y + 18}px)`;
+      else tipEl.style.transform = '';
+    },
     hideTitle() {
       const el = $('title-screen');
       el.classList.add('fade');

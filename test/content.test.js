@@ -21,13 +21,21 @@ describe('content', () => {
   it('has a title, the poem and the UI strings', () => {
     expect(nonEmpty(content.TITLE)).toBe(true);
     expect(content.POEM.stanza).toHaveLength(4);
-    for (const v of Object.values(content.UI)) expect(nonEmpty(v)).toBe(true);
+    const strings = (v) => (typeof v === 'string' ? [v] : Object.values(v).flatMap(strings));
+    for (const v of strings(content.UI)) expect(nonEmpty(v)).toBe(true);
   });
 
   it('gives every myth quotation a source', () => {
     for (const [name, m] of Object.entries(content.MYTHS)) {
       const hasSource = nonEmpty(m.source) || (m.sources && Object.values(m.sources).every(nonEmpty));
       expect(hasSource, `MYTHS.${name} has no source`).toBe(true);
+    }
+  });
+
+  it('words every device-specific instruction for each device', () => {
+    const { SPHINX, CRIB, BEETHOVEN } = content;
+    for (const hint of [SPHINX.look, SPHINX.choose, SPHINX.walk, SPHINX.grab, CRIB.hint, CRIB.lightHint, CRIB.soundHint, BEETHOVEN.hint, content.UI.howTo]) {
+      for (const p of ['desktop', 'phone', 'xr']) expect(nonEmpty(hint[p])).toBe(true);
     }
   });
 

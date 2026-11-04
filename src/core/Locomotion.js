@@ -59,7 +59,7 @@ class ComfortVignette extends THREE.Mesh {
  * Getting around. Scenes opt in with `this.walkArea = { center, radius, blockers, floorY }`.
  *  - headset: real walking, teleport (push a stick forward, or hold trigger / pinch on
  *    empty space, then let go), snap turn, optional smooth walking with a comfort vignette
- *  - desktop: WASD (the arrow keys still look around)
+ *  - desktop: WASD (the arrow keys still look around), or click the ground; a ring shows where
  *  - phone: tap the ground to go there
  *
  * `offset` sits between the rig and the camera: it brings the head back to the rig's
@@ -174,9 +174,25 @@ export class Locomotion {
     this._showMarker(x, floor, z);
   }
 
-  _showMarker(x, y, z) {
+  _showMarker(x, y, z, scale = 1, opacity = 0.9) {
     this.marker.position.set(x, y + 0.02, z);
+    this.marker.scale.setScalar(scale);
+    this.marker.material.opacity = opacity;
     this.marker.visible = true;
+  }
+
+  /** A faint ring on the ground under the mouse: you can go there. */
+  _updateGroundHover() {
+    if (this.dest) return;
+    const ray = this.input.mouseTarget || this.input.capture || this.input.down ? null : this.input.mouseRay();
+    const floor = this.area.floorY ?? 0;
+    if (!ray || ray.direction.y >= -0.02) {
+      this.marker.visible = false;
+      return;
+    }
+    ray.at((floor - ray.origin.y) / ray.direction.y, _p);
+    const [x, z] = clampToArea(this.area, _p.x, _p.z);
+    this._showMarker(x, floor, z, 0.7, 0.4);
   }
 
   _snap(dir) {
@@ -354,6 +370,7 @@ export class Locomotion {
     } else if (Math.hypot(this.vel.x, this.vel.y) > 0.002) {
       this._moveHeadTo(h.x + this.vel.x * dt, h.z + this.vel.y * dt);
     }
+    this._updateGroundHover();
   }
 
   update(dt) {

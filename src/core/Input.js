@@ -36,6 +36,8 @@ export class Input {
     this.onGroundTap = null; // phone: a tap that hit nothing (see Locomotion)
     this.groundTapEnabled = false;
     this.capture = null; // while set, the next click goes here (holding something on a flat screen)
+    this.onTip = null; // (tipKey | 'throw' | null, x, y): what to say beside the pointer
+    this.tipState = '';
     this.highlight = new Highlight(scene);
     this.extraHover = new Map(); // obj -> the hands reaching for it
     this.time = 0;
@@ -64,7 +66,7 @@ export class Input {
       this.down = null;
       if (!d || !e.isPrimary) return;
       const moved = Math.hypot(e.clientX - d.x, e.clientY - d.y);
-      if (moved < TAP_MAX_MOVE && performance.now() - d.t < TAP_MAX_TIME) this._tap(e.clientX, e.clientY, e.pointerType);
+      if (moved < TAP_MAX_MOVE && performance.now() - d.t < TAP_MAX_TIME) this._tap(e.clientX, e.clientY);
     });
     el.addEventListener('pointermove', (e) => {
       if (e.pointerType === 'mouse') this.mouse = { x: e.clientX, y: e.clientY };
@@ -84,9 +86,10 @@ export class Input {
   /**
    * Make `obj` (and its children) selectable. `dwell`: true, false, or seconds of gaze needed.
    * It glows softly on hover, except things with their own hover state (lights), or with `highlight: false`.
+   * `tip`: what the mouse pointer says over it (a key of UI.tips, or null). Lights have a label instead.
    */
-  add(obj, { onSelect, onHover, dwell = true, highlight = !obj.setHover } = {}) {
-    obj.userData.interactive = { onSelect, onHover, dwell, highlight };
+  add(obj, { onSelect, onHover, dwell = true, highlight = !obj.setHover, tip = obj.setHover ? null : 'choose' } = {}) {
+    obj.userData.interactive = { onSelect, onHover, dwell, highlight, tip };
     this.targets.add(obj);
     return obj;
   }
@@ -160,12 +163,19 @@ export class Input {
     return null;
   }
 
-  _tap(x, y, pointerType) {
+  _tap(x, y) {
     if (this.renderer.xr.isPresenting) return;
     this._rayFromScreen(x, y);
     const hit = this._pick();
-    if (!hit && !this.capture && pointerType === 'touch' && this.groundTapEnabled) this.onGroundTap?.(this.raycaster.ray);
+    if (!hit && !this.capture && this.groundTapEnabled) this.onGroundTap?.(this.raycaster.ray);
     this._fire(hit ? hit.obj : null);
+  }
+
+  /** The ray under the mouse (flat screens), or null when there is no mouse. */
+  mouseRay() {
+    if (!this.mouse) return null;
+    this._rayFromScreen(this.mouse.x, this.mouse.y);
+    return this.raycaster.ray;
   }
 
   /** What a controller is pointing at right now, if anything. */
@@ -241,7 +251,13 @@ export class Input {
         hovered.add(m.obj);
       }
     }
-    this.renderer.domElement.style.cursor = this.mouseTarget ? 'pointer' : '';
+    const xr = this.renderer.xr.isPresenting;
+    this.renderer.domElement.style.cursor = this.mouseTarget ? 'pointer' : this.down ? 'grabbing' : 'grab';
+    const tip = xr ? null : this.capture ? 'throw' : (this.mouseTarget?.userData.interactive.tip ?? null);
+    if (tip !== this.tipState || tip) {
+      this.tipState = tip;
+      this.onTip?.(tip, this.mouse?.x, this.mouse?.y);
+    }
 
     // XR controller rays.
     for (const s of this.controllers) {

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import * as content from './content.js';
-import { Scheduler, isMobile } from './core/util.js';
+import { Scheduler, isMobile, isQuest } from './core/util.js';
 import { Fader } from './core/Fader.js';
 import { Haze } from './core/Haze.js';
 import { Grain } from './core/Grain.js';
@@ -58,7 +58,8 @@ const interact = new Interact({ renderer, camera, input, parent: offset });
 const audio = new AudioSystem(camera, content.AUDIO);
 const narrator = new Narrator(content.SETTINGS);
 
-const ctx = { renderer, scene, rig, camera, scheduler, fader, haze, grain, look, input, locomotion, interact, prefs, audio, narrator, content, isMobile };
+const platform = () => (renderer.xr.isPresenting || isQuest ? 'xr' : isMobile ? 'phone' : 'desktop');
+const ctx = { renderer, scene, rig, camera, scheduler, fader, haze, grain, look, input, locomotion, interact, prefs, audio, narrator, content, isMobile, platform };
 const manager = new SceneManager(ctx, SCENES, ORDER);
 ctx.manager = manager;
 locomotion.onToggle = (key) => {
@@ -105,11 +106,15 @@ const ui = setupUI({
   look,
   prefs,
   isMobile,
+  platform,
   xrReady,
   onBegin: begin,
   onPause: setPaused,
   onRestart: () => begin({ scene: 'prologue' }),
 });
+
+input.onTip = ui.setTip;
+manager.onChange = () => ui.showControls(!!manager.current?.walkArea, manager.id === 'title' || manager.id === 'credits');
 
 renderer.xr.addEventListener('sessionstart', () => {
   look.enabled = false;

@@ -27,7 +27,25 @@ export const UI = {
   subtitle: 'An immersive memory in nine scenes',
   begin: 'Begin',
   headphones: 'Headphones recommended · about 12 minutes',
-  howTo: 'Look around by dragging, moving your phone, or turning your head. Walk with WASD, tap the ground, or push the stick. Hold your gaze on a light — or click, tap, pull the trigger — to choose.',
+  howTo: {
+    desktop: 'Drag to look around. Click whatever glows. In open places, walk with WASD or click the ground.',
+    phone: 'Move your phone, or drag, to look around. Tap whatever glows. In open places, tap the ground to walk.',
+    xr: 'Turn your head to look around. Point and pull the trigger, or reach out and grip. In open places, walk, or push the stick to teleport.',
+  },
+  // The small guide at the bottom of a flat screen, for a few seconds in each scene.
+  controls: {
+    walk: {
+      desktop: 'WASD or click the ground to walk  ·  drag to look  ·  click what glows',
+      phone: 'Tap the ground to walk  ·  drag to look  ·  tap what glows',
+    },
+    still: {
+      desktop: 'Drag to look  ·  click what glows',
+      phone: 'Move your phone to look  ·  tap what glows',
+    },
+  },
+  // Beside the mouse pointer.
+  tips: { choose: 'Click', pick: 'Click to pick up', touch: 'Click to touch' },
+  tipThrow: { desktop: 'Click to throw', phone: 'Tap to throw' },
   narrationOn: 'Narration: on',
   narrationOff: 'Narration: off',
   subtitlesOn: 'Subtitles: on',
@@ -54,11 +72,27 @@ export const UI = {
 // 0 · A Esfinge (abertura: ensina a olhar e a escolher)
 export const SPHINX = {
   open: 'At the gate of every life, the Sphinx is waiting.',
-  look: 'Look around — drag, move your phone, or turn your head',
+  look: {
+    desktop: 'Look around — drag with the mouse',
+    phone: 'Look around — move your phone, or drag',
+    xr: 'Look around — turn your head',
+  },
   find: 'Find the light.',
-  choose: 'Hold your gaze on it — or click, tap, pull the trigger',
-  walk: 'Walk closer — push the stick, use WASD, or tap the ground',
-  grab: 'Pick up what the last traveller left — grip, pinch, or click it',
+  choose: {
+    desktop: 'Click it — or keep it in the middle of your view',
+    phone: 'Tap it — or keep it in the middle of your view',
+    xr: 'Point and pull the trigger — or hold your gaze on it',
+  },
+  walk: {
+    desktop: 'Walk closer — WASD, or click the ground',
+    phone: 'Walk closer — tap the ground',
+    xr: 'Walk closer — or push the stick forward and let go',
+  },
+  grab: {
+    desktop: 'Pick up the crown the last traveller left — click it, then click again to throw',
+    phone: 'Pick up the crown the last traveller left — tap it, then tap again to throw',
+    xr: 'Pick up the crown the last traveller left — reach down and grip, or point and pull the trigger',
+  },
   ask: 'Every soul must answer her before it is born.',
   answerHint: 'Answer her',
   wrong: 'No. Look again.',
@@ -70,7 +104,7 @@ export const SPHINX = {
 // 2 · Berço
 export const CRIB = {
   intro: ['You remember everything.', 'You know exactly what to say.'],
-  hint: 'Try to speak — click, tap or pull the trigger',
+  hint: { desktop: 'Try to speak — click', phone: 'Try to speak — tap', xr: 'Try to speak — pull the trigger' },
   // O que o bebê TENTA dizer a cada clique (aparece e se desfaz em choro).
   attempts: [
     'I remember how I died —',
@@ -81,11 +115,11 @@ export const CRIB = {
   ],
   afterCries: 'But all that comes out is a cry.',
   light: 'The light from the window finds your face.',
-  lightHint: 'Look at the light',
+  lightHint: { desktop: 'Look at the light — drag toward it, or click it', phone: 'Look at the light — or tap it', xr: 'Look at the light' },
   // Volta do Ícaro → gatilho da audição
   back: 'Another life. Another ending.',
   sound: 'Something, behind the wall…',
-  soundHint: 'Look toward the sound',
+  soundHint: { desktop: 'Look toward the sound — drag, or click the door', phone: 'Look toward the sound — or tap the door', xr: 'Look toward the sound' },
 };
 
 // 3 · Ícaro
@@ -101,7 +135,7 @@ export const ICARUS = {
 // 4 · Beethoven
 export const BEETHOVEN = {
   open: 'Silence. You have not heard a sound in years.',
-  hint: 'Play — click, tap or pull the trigger',
+  hint: { desktop: 'Play — click, or press Space', phone: 'Play — tap', xr: 'Play — pull the trigger' },
   feel: 'You feel the music in the wood, in your bones.',
   hear: 'And then — you hear it.',
   hand: 'A hand holds yours.',

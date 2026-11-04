@@ -94,6 +94,9 @@ export function glowTexture() {
   return glowTex;
 }
 
+/** Instructions can differ by device: a plain string, or { desktop, phone, xr }. */
+export const forPlatform = (text, platform) => (typeof text === 'string' ? text : text[platform]);
+
 export const isQuest = /OculusBrowser|Quest|Pico/i.test(navigator.userAgent);
 export const isMobile =
   !isQuest &&
