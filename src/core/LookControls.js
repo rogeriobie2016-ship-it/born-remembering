@@ -16,7 +16,7 @@ const _q = new THREE.Quaternion();
  * The camera rotates in place — it never orbits — so the viewer always
  * stays inside the scene:
  *  - mouse / finger drag (grab-the-world)
- *  - arrow keys or WASD
+ *  - arrow keys, and WASD unless the scene is walkable (then WASD walks; see Locomotion)
  *  - phone gyroscope (DeviceOrientation; asks permission on iOS), with drag adding extra yaw
  */
 export class LookControls {
@@ -28,6 +28,7 @@ export class LookControls {
     this.targetYaw = 0;
     this.targetPitch = 0;
     this.keys = new Set();
+    this.wasdLook = true;
 
     this.gyro = false;
     this.deviceQ = new THREE.Quaternion();
@@ -103,11 +104,12 @@ export class LookControls {
   update(dt) {
     if (!this.enabled) return;
     const k = this.keys;
-    if (k.has('ArrowLeft') || k.has('KeyA')) this.targetYaw += KEY_SPEED * dt;
-    if (k.has('ArrowRight') || k.has('KeyD')) this.targetYaw -= KEY_SPEED * dt;
+    const w = this.wasdLook;
+    if (k.has('ArrowLeft') || (w && k.has('KeyA'))) this.targetYaw += KEY_SPEED * dt;
+    if (k.has('ArrowRight') || (w && k.has('KeyD'))) this.targetYaw -= KEY_SPEED * dt;
     if (!this.hasOrientation) {
-      if (k.has('ArrowUp') || k.has('KeyW')) this.targetPitch += KEY_SPEED * dt;
-      if (k.has('ArrowDown') || k.has('KeyS')) this.targetPitch -= KEY_SPEED * dt;
+      if (k.has('ArrowUp') || (w && k.has('KeyW'))) this.targetPitch += KEY_SPEED * dt;
+      if (k.has('ArrowDown') || (w && k.has('KeyS'))) this.targetPitch -= KEY_SPEED * dt;
       this.targetPitch = clamp(this.targetPitch, -PITCH_LIMIT, PITCH_LIMIT);
     }
 

@@ -5,6 +5,9 @@ import { Fader } from './core/Fader.js';
 import { Haze } from './core/Haze.js';
 import { Grain } from './core/Grain.js';
 import { Input } from './core/Input.js';
+import { Locomotion } from './core/Locomotion.js';
+import { Interact } from './core/Interact.js';
+import { Prefs } from './core/Prefs.js';
 import { LookControls } from './core/LookControls.js';
 import { AudioSystem } from './core/AudioSystem.js';
 import { Narrator } from './core/Narrator.js';
@@ -18,6 +21,8 @@ const DEBUG = params.has('debug');
 const FIRST_SCENE = params.get('scene') && SCENES[params.get('scene')] ? params.get('scene') : 'sphinx';
 const FIRST_PARAMS = { phase: params.get('phase') || undefined, ending: params.get('ending') || undefined };
 const FOV = 70;
+// ?xr (dev server only): a simulated Quest 3 in the browser, for testing without a headset.
+const xrReady = import.meta.env.DEV && params.has('xr') ? import('./dev/emulator.js').then((m) => m.installEmulator()) : Promise.resolve();
 const SPEED = Math.min(8, Number(params.get('speed')) || 1); // ?speed=4 fast-forwards timelines (testing)
 
 // ---------- renderer / world ----------
@@ -26,7 +31,8 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.xr.enabled = true;
 // 'local' = origin at the head when the session starts: the rig position *is* the eye position,
-// the same on flat screens and in the headset (seated, standing or lying down).
+// the same on flat screens and in the headset (seated, standing or lying down). Walking around
+// the room still works: the head moves within it, and Locomotion recentres it for each scene.
 renderer.xr.setReferenceSpaceType('local');
 renderer.xr.setFoveation(1);
 document.getElementById('app').appendChild(renderer.domElement);
@@ -35,7 +41,9 @@ const scene = new THREE.Scene();
 const rig = new THREE.Group();
 scene.add(rig);
 const camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, 0.05, 300);
-rig.add(camera);
+const offset = new THREE.Group(); // where the viewer's room sits inside the rig (see Locomotion)
+rig.add(offset);
+offset.add(camera);
 
 // ---------- systems ----------
 const scheduler = new Scheduler();
@@ -43,13 +51,21 @@ const fader = new Fader(camera, scheduler);
 const haze = new Haze(camera, renderer);
 const grain = new Grain(camera);
 const look = new LookControls(camera, renderer.domElement);
-const input = new Input({ renderer, camera, rig, settings: content.SETTINGS });
+const prefs = new Prefs();
+const input = new Input({ renderer, scene, camera, rig: offset, settings: content.SETTINGS });
+const locomotion = new Locomotion({ renderer, scene, camera, rig, offset, input, look, prefs });
+const interact = new Interact({ renderer, camera, input, parent: offset });
 const audio = new AudioSystem(camera, content.AUDIO);
 const narrator = new Narrator(content.SETTINGS);
 
-const ctx = { renderer, scene, rig, camera, scheduler, fader, haze, grain, look, input, audio, narrator, content, isMobile };
+const ctx = { renderer, scene, rig, camera, scheduler, fader, haze, grain, look, input, locomotion, interact, prefs, audio, narrator, content, isMobile };
 const manager = new SceneManager(ctx, SCENES, ORDER);
 ctx.manager = manager;
+locomotion.onToggle = (key) => {
+  const { UI } = content;
+  const label = key === 'smooth' ? (prefs.smooth ? UI.smoothOn : UI.smoothOff) : prefs.subtitles ? UI.subtitlesOn : UI.subtitlesOff;
+  manager.current?.say(label, { narrate: false, force: true, hold: 0.4 });
+};
 
 // ---------- flow ----------
 let started = false;
@@ -87,7 +103,9 @@ const ui = setupUI({
   audio,
   narrator,
   look,
+  prefs,
   isMobile,
+  xrReady,
   onBegin: begin,
   onPause: setPaused,
   onRestart: () => begin({ scene: 'prologue' }),
@@ -149,6 +167,8 @@ renderer.setAnimationLoop(() => {
   look.update(dt);
   input.reticle.visible = renderer.xr.isPresenting || (manager.current ? manager.current.showReticle : false);
   input.update(dt);
+  locomotion.update(dt);
+  interact.update(dt);
   manager.update(dt, scheduler.time);
   renderer.render(scene, camera);
   if (DEBUG) updateDebug(dt);

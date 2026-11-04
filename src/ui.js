@@ -10,7 +10,7 @@ const $ = (id) => document.getElementById(id);
  *   onPause(paused)    the menu opened / closed
  *   onRestart()
  */
-export function setupUI({ content, renderer, audio, narrator, look, isMobile, onBegin, onPause, onRestart }) {
+export function setupUI({ content, renderer, audio, narrator, look, prefs, isMobile, xrReady, onBegin, onPause, onRestart }) {
   const { UI, TITLE, CHAPTERS, CREDITS } = content;
   let started = false;
 
@@ -51,7 +51,8 @@ export function setupUI({ content, renderer, audio, narrator, look, isMobile, on
 
   // ---------- Enter VR ----------
   let vrButton = null;
-  if (navigator.xr) {
+  xrReady.then(() => {
+    if (!navigator.xr) return;
     navigator.xr
       .isSessionSupported('immersive-vr')
       .then((ok) => {
@@ -61,7 +62,7 @@ export function setupUI({ content, renderer, audio, narrator, look, isMobile, on
         (started ? $('hud-vr-slot') : $('vr-slot')).appendChild(vrButton);
       })
       .catch(() => {});
-  }
+  });
 
   // ---------- menu panels ----------
   const menu = $('menu');
@@ -155,6 +156,22 @@ export function setupUI({ content, renderer, audio, narrator, look, isMobile, on
   soundBtn.addEventListener('click', () => {
     audio.setMuted(!audio.muted);
     setSoundLabel();
+  });
+
+  const subtitlesBtn = $('btn-subtitles');
+  const setSubtitlesLabel = () => (subtitlesBtn.textContent = prefs.subtitles ? UI.subtitlesOn : UI.subtitlesOff);
+  setSubtitlesLabel();
+  subtitlesBtn.addEventListener('click', () => {
+    prefs.set('subtitles', !prefs.subtitles);
+    setSubtitlesLabel();
+  });
+
+  const smoothBtn = $('btn-smooth');
+  const setSmoothLabel = () => (smoothBtn.textContent = prefs.smooth ? UI.smoothOn : UI.smoothOff);
+  setSmoothLabel();
+  smoothBtn.addEventListener('click', () => {
+    prefs.set('smooth', !prefs.smooth);
+    setSmoothLabel();
   });
 
   const gyroBtn = $('btn-gyro');

@@ -82,12 +82,12 @@ export class OrpheusScene extends BaseScene {
 
     // the threshold of the upper world: a light at the end of the path
     this.exitPos = new THREE.Vector3(1.6, 2.2, -19);
-    this.exit = new THREE.Sprite(
+    this.exitLight = new THREE.Sprite(
       new THREE.SpriteMaterial({ map: glowTexture(), color: '#fff6dc', transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }),
     );
-    this.exit.position.copy(this.exitPos);
-    this.exit.scale.setScalar(9);
-    this.add(this.exit);
+    this.exitLight.position.copy(this.exitPos);
+    this.exitLight.scale.setScalar(9);
+    this.add(this.exitLight);
 
     // ---------- Orpheus and Eurydice ----------
     const walker = (tex, h) => {
@@ -261,14 +261,14 @@ export class OrpheusScene extends BaseScene {
       this.beethoven.position.set(1.7, 0, -4.6);
       this.beethoven.lookAt(0, 0.8, 0);
     }
-    const e0 = this.exit.position.clone();
-    this.tween(4, (k) => this.exit.position.lerpVectors(e0, new THREE.Vector3(-0.3, 2.6, -7), k), ease.out);
+    const e0 = this.exitLight.position.clone();
+    this.tween(4, (k) => this.exitLight.position.lerpVectors(e0, new THREE.Vector3(-0.3, 2.6, -7), k), ease.out);
     await this.tween(4, (k) => {
       if (this.muses) this.muses.material.opacity = k;
       if (this.beethoven) this.beethoven.material.opacity = k;
       if (this.beethovenRock) this.beethovenRock.material.opacity = k;
       if (this.orpheus.userData.fig) this.orpheus.userData.fig.material.opacity = 1 - k;
-      this.exit.material.opacity = 0.85 + 0.15 * k;
+      this.exitLight.material.opacity = 0.85 + 0.15 * k;
     });
     haze.set({ color: '#fff6e0', amount: 0 });
     await this.wait(3);
@@ -288,7 +288,7 @@ export class OrpheusScene extends BaseScene {
       g.lookAt(0, g.position.y, 0);
       if (g.userData.fig) g.userData.fig.rotation.z = Math.sin(t * 2 + (g === this.orpheus ? 0 : 1)) * 0.02;
     }
-    this.exit.scale.setScalar(9 + Math.sin(t * 0.7) * 0.4);
+    this.exitLight.scale.setScalar(9 + Math.sin(t * 0.7) * 0.4);
     for (const h of this.myHands) h.update(t, dt);
   }
 }

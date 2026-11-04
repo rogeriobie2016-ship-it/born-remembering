@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { BaseScene } from '../core/SceneManager.js';
 import { Dust, Orb } from '../core/props.js';
 import { ease, lerp } from '../core/util.js';
-import { softMaterial, inkOutlineAll } from '../core/look.js';
+import { thump } from '../core/synth.js';
+import { softMaterial, inkOutlineAll, paintedTexture } from '../core/look.js';
 import { engravedSky } from '../core/engraved.js';
 import { loadArt, cutout, groundShadow, cartouche, ScrollWriter } from '../core/collage.js';
 
@@ -11,7 +12,8 @@ import { loadArt, cutout, groundShadow, cartouche, ScrollWriter } from '../core/
 // You stand in Gustave Moreau's gorge at dusk ("Oedipus and the Sphinx", 1864): the
 // painting itself, its figures lifted out, wraps all around you; on the ledge before you
 // the Sphinx clings to Oedipus beside the white-and-blue column and its urn.
-// She teaches you to look and to choose: find a light, hold your gaze on it. Then she asks
+// She teaches you to look, to choose, to walk and to pick things up: find a light, come closer,
+// lift the crown of a traveller who failed (the painting has it at her feet). Then she asks
 // you her riddle. Its answer — a human being, on four feet, then two, then three — is the
 // life you are about to live. She throws herself from the rock, and you are born.
 //
@@ -20,12 +22,14 @@ import { loadArt, cutout, groundShadow, cartouche, ScrollWriter } from '../core/
 const EYE = 1.6;
 const LEDGE = new THREE.Vector3(0, 0.6, -3.7); // top of the rock the pair stands on
 const DUSK = new THREE.Color('#4f5d5a');
+const FEATHERS = 7;
 
 export class SphinxScene extends BaseScene {
   skipTo = 'prologue';
 
   async enter() {
     const { ctx } = this;
+    ctx.audio.define('thump', () => thump());
     ctx.rig.position.set(0, EYE, 0);
     ctx.look.reset(0, -0.02);
     ctx.scene.background = DUSK.clone();
@@ -34,7 +38,7 @@ export class SphinxScene extends BaseScene {
     ctx.grain.set({ grain: 0.06, vignette: 0.45, color: '#0d1210' });
     ctx.haze.set({ amount: 0.1, color: '#2a3634', saturate: 0.95, blur: 0 });
 
-    const [T] = await Promise.all([loadArt('sphinx', ['sphinx', 'gorge', 'rock', 'figtree']), ctx.audio.preload(['moonlight'])]);
+    const [T] = await Promise.all([loadArt('sphinx', ['sphinx', 'gorge', 'rock', 'figtree']), ctx.audio.preload(['moonlight', 'thump'])]);
     this.art = T;
 
     // ---------- Moreau's sky, all around ----------
@@ -160,10 +164,94 @@ export class SphinxScene extends BaseScene {
     this.root.add(this.hemi, this.sun);
     this.add(new Dust({ count: 260, radius: 6, opacity: 0.25, color: '#e8e2cf', size: 0.025, speed: 0.008 }));
 
+    this._buildTouchables(rockMat, gold);
+
+    this.walkArea = {
+      center: [0, -0.5],
+      radius: 10,
+      blockers: [
+        { x: LEDGE.x, z: LEDGE.z, r: 1.55, top: LEDGE.y }, // the rock (loose things can land on top)
+        { x: 1.65, z: -3.9, r: 0.32 }, // the column
+      ],
+    };
+
     this.scroll = this.add(cartouche(2.1, 0.95));
     this.scroll.position.set(-1.6, 2.45, -3.1);
     this.scroll.lookAt(0, EYE, 0);
     this.writer = new ScrollWriter(this, this.scroll);
+  }
+
+  /** What the viewer can pick up, and the wing that sheds when touched. */
+  _buildTouchables(rockMat, gold) {
+    const { interact } = this.ctx;
+    const thud = (speed, obj) => this.sound('thump', { parent: obj, volume: Math.min(0.8, speed * 0.16), refDistance: 2 });
+
+    // the crown of a traveller who could not answer (in Moreau it lies at her feet)
+    const crown = new THREE.Group();
+    const band = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.012, 8, 28), gold);
+    band.rotation.x = Math.PI / 2;
+    crown.add(band);
+    for (let i = 0; i < 7; i++) {
+      const a = (i / 7) * Math.PI * 2;
+      const spike = new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.05, 6), gold);
+      spike.position.set(Math.cos(a) * 0.085, 0.025, Math.sin(a) * 0.085);
+      crown.add(spike);
+    }
+    crown.position.set(-0.75, 0.03, -2.1);
+    crown.rotation.z = 0.12;
+    this.add(crown);
+    this.grabbed = false;
+    interact.addGrabbable(crown, { radius: 0.03, reach: 0.11, bounce: 0.25, friction: 3.5, onGrab: () => (this.grabbed = true), onHit: thud });
+
+    // stones to throw, and to hear land
+    for (const [x, z, r, seed] of [[0.55, -1.75, 0.075, 2], [-1.35, -1.6, 0.095, 3], [1.1, -2.4, 0.06, 4]]) {
+      const stone = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 1), rockMat);
+      stone.scale.set(1, 0.8, 0.9);
+      stone.rotation.set(seed, seed * 2, 0);
+      stone.position.set(x, r * 0.8, z);
+      this.add(stone);
+      interact.addGrabbable(stone, { radius: r * 0.85, reach: r + 0.03, bounce: 0.3, onGrab: () => (this.grabbed = true), onHit: thud });
+    }
+
+    // her wing, which sheds when touched (or clicked, or pointed at with the trigger)
+    const tex = paintedTexture(64, 192, (c, w, h) => {
+      c.fillStyle = '#c4cfd6';
+      c.beginPath();
+      c.moveTo(w / 2, 0);
+      c.quadraticCurveTo(w, h * 0.4, w / 2, h);
+      c.quadraticCurveTo(0, h * 0.4, w / 2, 0);
+      c.fill();
+      c.strokeStyle = '#3f5468';
+      c.lineWidth = 3;
+      c.beginPath();
+      c.moveTo(w / 2, 0);
+      c.lineTo(w / 2, h);
+      c.stroke();
+    });
+    const featherMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, alphaTest: 0.3, side: THREE.DoubleSide, depthWrite: false });
+    const featherGeo = new THREE.PlaneGeometry(0.05, 0.15);
+    this.feathers = [];
+    for (let i = 0; i < FEATHERS; i++) {
+      const m = new THREE.Mesh(featherGeo, featherMat);
+      m.visible = false;
+      m.raycast = () => {};
+      this.add(m);
+      this.feathers.push({ m, phase: i * 1.7, falling: false });
+    }
+    this.wing = new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 8), new THREE.MeshBasicMaterial({ visible: false }));
+    this.wing.position.set(LEDGE.x - 0.62, LEDGE.y + 1.75, LEDGE.z + 0.05);
+    this.add(this.wing);
+    interact.addTouch(this.wing, { radius: 0.55, cooldown: 1.5, onTouch: () => this._shed() });
+    this.nextFeather = 0;
+  }
+
+  _shed() {
+    for (let i = 0; i < 3; i++) {
+      const f = this.feathers[this.nextFeather++ % FEATHERS];
+      f.m.position.copy(this.wing.position).add(new THREE.Vector3((Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.4, 0.15));
+      f.m.visible = true;
+      f.falling = true;
+    }
   }
 
   /** A light to find and choose. Returns the orb; `opts` go to input.add. */
@@ -196,12 +284,13 @@ export class SphinxScene extends BaseScene {
       },
       onSelect: () => (chosen = true),
     });
-    this.say(S.look, { hold: 3 });
-    this.writer.say(S.find, { hold: 1 });
+    this.writer.say(S.find, { hold: 0.4 }).then(() => {
+      if (!found && !chosen) this.say(S.look, { narrate: false, hold: 4 });
+    });
     await this.until(() => found || chosen, 20);
 
     // ---- learn to choose: hold your gaze, or click / tap / trigger ----
-    this.say(S.choose, { hold: 3 });
+    this.say(S.choose, { narrate: false, hold: 3 });
     await this.until(() => chosen, 20);
     input.remove(first);
     const p0 = first.position.clone();
@@ -211,6 +300,16 @@ export class SphinxScene extends BaseScene {
       first.scale.setScalar(1 - k * 0.9);
     }, ease.inOut);
     this.drop(first);
+
+    // ---- learn to walk, and to pick things up ----
+    const camera = this.ctx.camera;
+    const from = camera.getWorldPosition(new THREE.Vector3());
+    const here = new THREE.Vector3();
+    this.say(S.walk, { narrate: false, hold: 3 });
+    await this.until(() => camera.getWorldPosition(here).distanceTo(from) > 0.8, 15);
+    this.say(S.grab, { narrate: false, hold: 3 });
+    await this.until(() => this.grabbed, 15);
+    await this.wait(1);
 
     // ---- the riddle ----
     await this.writer.say(S.ask, { hold: 1 });
@@ -236,9 +335,9 @@ export class SphinxScene extends BaseScene {
       });
       return orb;
     });
-    this.say(S.answerHint, { hold: 2 });
+    this.say(S.answerHint, { narrate: false, hold: 2 });
     await this.until(() => answered);
-    input.clear();
+    for (const o of orbs) input.remove(o);
     const right = orbs[S.right];
     orbs.forEach((o, i) => {
       if (i === S.right || !o.visible) return;
@@ -270,5 +369,17 @@ export class SphinxScene extends BaseScene {
     this.sky.u.time.value = t;
     // the paper figures breathe a little, as in every scene
     if (this.pairFig) this.pairFig.rotation.z = Math.sin(t * 0.8) * 0.006;
+    // shed feathers sway down and settle
+    for (const f of this.feathers) {
+      if (!f.falling) continue;
+      f.m.position.y -= dt * 0.32;
+      f.m.position.x += Math.sin(t * 2.1 + f.phase) * dt * 0.28;
+      f.m.rotation.set(Math.sin(t * 1.3 + f.phase) * 0.5, t + f.phase, Math.sin(t * 2.1 + f.phase) * 0.6);
+      if (f.m.position.y < 0.02) {
+        f.m.position.y = 0.02;
+        f.m.rotation.set(-Math.PI / 2, 0, f.phase);
+        f.falling = false;
+      }
+    }
   }
 }

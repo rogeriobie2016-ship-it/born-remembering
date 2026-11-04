@@ -1,9 +1,8 @@
 import * as THREE from 'three';
 import { BaseScene } from '../core/SceneManager.js';
-import { TextBlock, wrap } from '../core/TextBlock.js';
 import { ease, lerp, glowTexture } from '../core/util.js';
 import { softMaterial, paintedTexture, ENGRAVE_GLSL } from '../core/look.js';
-import { loadArt, cutout, groundShadow, cartouche, SCROLL_INK } from '../core/collage.js';
+import { loadArt, cutout, groundShadow } from '../core/collage.js';
 
 // Scene 1 — The Garden. Before birth, the soul stands in Botticelli's night garden
 // (La Primavera): the Graces dance, Zephyr chases Chloris, Cupid circles overhead,
@@ -308,51 +307,17 @@ export class PrologueScene extends BaseScene {
     this.sun.position.set(-3, 6, 2);
     this.root.add(this.hemi, this.sun);
 
-    // ---------- words ----------
-    const { POEM, TITLE_LINES, MYTHS } = ctx.content;
-    this.invocation = this.add(new TextBlock(wrap(MYTHS.prologue.text, 30), { size: 0.105, lineHeight: 1.45, ...SCROLL_INK }));
-    this.invocation.position.set(0, EYE + 0.46, -3.2);
-    this.invocationSrc = this.add(new TextBlock([MYTHS.prologue.source], { size: 0.045, italic: false, color: '#6b4a2c', glow: null, float: 0.3 }));
-    this.invocationSrc.position.set(0, this.invocation.position.y - this.invocation.height / 2 - 0.12, -3.2);
-
-    this.poem = this.add(new TextBlock(POEM.stanza, { size: 0.12, lineHeight: 1.55, ...SCROLL_INK }));
-    this.poem.position.set(0, EYE + 0.35, -3.2);
-    this.attrib = this.add(new TextBlock([POEM.attribution], { size: 0.05, italic: false, color: '#6b4a2c', glow: null, float: 0.3 }));
-    this.attrib.position.set(0, this.poem.position.y - this.poem.height / 2 - 0.18, -3.2);
-    // the words are carried on a scroll, as in an engraving's cartouche
-    this.scroll = this.add(cartouche(3.3, 1.45));
-    this.scroll.position.set(0, EYE + 0.4, -3.25);
-
-    this.title = this.add(new TextBlock(TITLE_LINES, { size: 0.21, lineHeight: 1.4, ...SCROLL_INK }));
-    this.title.position.set(0, EYE + 1.55, -4.0);
-    this.titleScroll = this.add(cartouche(3.6, 1.35));
-    this.titleScroll.position.set(0, EYE + 1.55, -4.05);
   }
 
   async start() {
-    const { audio, narrator, content } = this.ctx;
+    const { audio, content } = this.ctx;
     audio.playMusic('moonlight', { volume: 0.32, fade: 6 });
     await this.wait(3);
 
-    // The Muses are invoked, on an unrolling scroll.
-    this.tween(1.5, (k) => (this.scroll.material.opacity = k));
-    await this.invocation.reveal(this, { perWord: 0.16, fade: 1.0, linePause: 0.2 });
-    this.invocationSrc.reveal(this, { perWord: 0.1, fade: 1 });
-    narrator.speak(content.MYTHS.prologue.text);
-    await this.wait(4);
-    await Promise.all([this.invocation.fadeOut(this, 2), this.invocationSrc.fadeOut(this, 2)]);
-
-    // The poem.
-    const lines = content.POEM.stanza;
-    for (let i = 0; i < lines.length; i++) {
-      await Promise.all([this.poem.revealLine(this, i, { perWord: 0.3, fade: 1.1 }), narrator.speak(lines[i])]);
-      await this.wait(0.7);
-    }
-    await this.attrib.reveal(this, { perWord: 0.1, fade: 1.2 });
-    await this.wait(2.5);
-    this.poem.fadeOut(this, 2.5);
-    this.attrib.fadeOut(this, 2.5);
-    this.tween(2.5, (k) => (this.scroll.material.opacity = 1 - k));
+    // The Muses are invoked; then the poem, line by line.
+    await this.say(content.MYTHS.prologue.text, { hold: 1 });
+    for (const line of content.POEM.stanza) await this.say(line, { hold: 0.5 });
+    await this.wait(2);
 
     // The grove opens onto the sea: Venus rises on her shell, the winds blow her ashore.
     audio.fadeMusic(0.5, 6);
@@ -378,9 +343,7 @@ export class PrologueScene extends BaseScene {
     }
     await this.wait(4);
     this.tween(4, (k) => (this.halo.material.opacity = 0.55 * k));
-    this.tween(1.5, (k) => (this.titleScroll.material.opacity = k));
-    await this.title.reveal(this, { perWord: 0.35, fade: 1.3, linePause: 0.5 });
-    await this.wait(3);
+    await this.wait(5);
     this.next('crib', {}, { color: '#ffffff', out: 3, in: 2.5 });
   }
 

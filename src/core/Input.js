@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Reticle } from './Reticle.js';
+import { Highlight } from './Highlight.js';
 
 const TAP_MAX_MOVE = 10; // px
 const TAP_MAX_TIME = 500; // ms
@@ -25,13 +26,19 @@ function isShown(o) {
  * `onSelectNothing` (the active scene decides what that means).
  */
 export class Input {
-  constructor({ renderer, camera, rig, settings }) {
+  constructor({ renderer, scene, camera, rig, settings }) {
     this.renderer = renderer;
     this.camera = camera;
     this.settings = settings;
     this.targets = new Set();
     this.enabled = true;
     this.onSelectNothing = null;
+    this.onGroundTap = null; // phone: a tap that hit nothing (see Locomotion)
+    this.groundTapEnabled = false;
+    this.capture = null; // while set, the next click goes here (holding something on a flat screen)
+    this.highlight = new Highlight(scene);
+    this.extraHover = new Map(); // obj -> the hands reaching for it
+    this.time = 0;
 
     this.raycaster = new THREE.Raycaster();
     this.raycaster.camera = camera;
@@ -57,7 +64,7 @@ export class Input {
       this.down = null;
       if (!d || !e.isPrimary) return;
       const moved = Math.hypot(e.clientX - d.x, e.clientY - d.y);
-      if (moved < TAP_MAX_MOVE && performance.now() - d.t < TAP_MAX_TIME) this._tap(e.clientX, e.clientY);
+      if (moved < TAP_MAX_MOVE && performance.now() - d.t < TAP_MAX_TIME) this._tap(e.clientX, e.clientY, e.pointerType);
     });
     el.addEventListener('pointermove', (e) => {
       if (e.pointerType === 'mouse') this.mouse = { x: e.clientX, y: e.clientY };
@@ -74,9 +81,12 @@ export class Input {
     for (let i = 0; i < 2; i++) this._setupController(i, rig);
   }
 
-  /** Make `obj` (and its children) selectable. `dwell`: true, false, or seconds of gaze needed. */
-  add(obj, { onSelect, onHover, dwell = true } = {}) {
-    obj.userData.interactive = { onSelect, onHover, dwell };
+  /**
+   * Make `obj` (and its children) selectable. `dwell`: true, false, or seconds of gaze needed.
+   * It glows softly on hover, except things with their own hover state (lights), or with `highlight: false`.
+   */
+  add(obj, { onSelect, onHover, dwell = true, highlight = !obj.setHover } = {}) {
+    obj.userData.interactive = { onSelect, onHover, dwell, highlight };
     this.targets.add(obj);
     return obj;
   }
@@ -84,11 +94,16 @@ export class Input {
   remove(obj) {
     this.targets.delete(obj);
     this.hovered.delete(obj);
+    this.extraHover.delete(obj);
+    this.highlight.set(obj, false);
   }
 
   clear() {
     this.targets.clear();
     this.hovered.clear();
+    this.extraHover.clear();
+    this.highlight.clear();
+    this.capture = null;
     this.gazeTarget = null;
     this.mouseTarget = null;
     this.gazeTime = 0;
@@ -101,7 +116,7 @@ export class Input {
     line.scale.z = 4;
     line.visible = false;
     c.add(line);
-    const state = { c, line, source: null };
+    const state = { c, line, source: null, grabbing: false, aimHold: 0, stickAim: false };
     c.addEventListener('connected', (e) => {
       state.source = e.data;
       line.visible = e.data.targetRayMode === 'tracked-pointer';
@@ -111,6 +126,7 @@ export class Input {
       line.visible = false;
     });
     c.addEventListener('select', () => {
+      if (state.grabbing) return; // that press picked something up
       this._rayFromObject(c);
       const hit = this._pick();
       this._fire(hit ? hit.obj : null, state.source);
@@ -144,11 +160,28 @@ export class Input {
     return null;
   }
 
-  _tap(x, y) {
+  _tap(x, y, pointerType) {
     if (this.renderer.xr.isPresenting) return;
     this._rayFromScreen(x, y);
     const hit = this._pick();
+    if (!hit && !this.capture && pointerType === 'touch' && this.groundTapEnabled) this.onGroundTap?.(this.raycaster.ray);
     this._fire(hit ? hit.obj : null);
+  }
+
+  /** What a controller is pointing at right now, if anything. */
+  rayTarget(state) {
+    this._rayFromObject(state.c);
+    const h = this._pick();
+    return h ? h.obj : null;
+  }
+
+  /** A hand is reaching for `obj`: it counts as hover, so it glows. */
+  setExtraHover(obj, handIndex, on) {
+    const set = this.extraHover.get(obj) || new Set();
+    if (on) set.add(handIndex);
+    else set.delete(handIndex);
+    if (set.size) this.extraHover.set(obj, set);
+    else this.extraHover.delete(obj);
   }
 
   _fire(target, source) {
@@ -156,6 +189,10 @@ export class Input {
     const now = performance.now();
     if (now - this.lastFire < FIRE_COOLDOWN) return;
     this.lastFire = now;
+    if (this.capture) {
+      this.capture();
+      return;
+    }
     if (target) {
       const pad = source && source.gamepad;
       if (pad && pad.hapticActuators && pad.hapticActuators[0]) pad.hapticActuators[0].pulse(0.6, 60);
@@ -215,8 +252,21 @@ export class Input {
       if (h) hovered.add(h.obj);
     }
 
-    for (const o of this.hovered) if (!hovered.has(o)) o.userData.interactive?.onHover?.(false, o);
-    for (const o of hovered) if (!this.hovered.has(o)) o.userData.interactive?.onHover?.(true, o);
+    for (const o of this.extraHover.keys()) if (this.targets.has(o)) hovered.add(o);
+
+    const glows = (o) => o.userData.interactive?.highlight;
+    for (const o of this.hovered) {
+      if (hovered.has(o)) continue;
+      o.userData.interactive?.onHover?.(false, o);
+      if (glows(o)) this.highlight.set(o, false);
+    }
+    for (const o of hovered) {
+      if (this.hovered.has(o)) continue;
+      o.userData.interactive?.onHover?.(true, o);
+      if (glows(o)) this.highlight.set(o, true);
+    }
     this.hovered = hovered;
+    this.time += dt;
+    this.highlight.update(dt, this.time);
   }
 }

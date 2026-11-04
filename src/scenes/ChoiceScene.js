@@ -13,7 +13,6 @@ import { defineNurserySounds } from './CribScene.js';
  */
 export class ChoiceScene extends BaseScene {
   skipTo = 'endHold';
-  textStyle = INK;
 
   async enter() {
     const { ctx } = this;

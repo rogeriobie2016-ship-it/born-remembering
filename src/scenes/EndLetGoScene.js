@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { BaseScene } from '../core/SceneManager.js';
-import { TextBlock } from '../core/TextBlock.js';
 import { ease, lerp, glowTexture } from '../core/util.js';
 import { softMaterial } from '../core/look.js';
 import { engravedSky, engravedSea } from '../core/engraved.js';
@@ -359,11 +358,7 @@ export class EndLetGoScene extends BaseScene {
     this.tween(24, (k) => (this.dusk = lerp(d0, 1, k)), ease.inOut);
     await this.say(T.lines[2], { hold: 3 });
     await this.until(() => this.dusk > 0.6, 20);
-    const fragment = this.add(new TextBlock([T.fragment], { size: 0.13, lineHeight: 1.4 }));
-    fragment.position.set(0, SEATED + 0.35, -2.6);
-    await fragment.reveal(this, { perWord: 0.4, fade: 1.4 });
-    await this.wait(3);
-    fragment.fadeOut(this, 3);
+    await this.say(T.fragment, { narrate: false, hold: 3 });
 
     // You close your eyes: heavy, a blink, then shut.
     this.say(T.lines[3], { hold: 2 });

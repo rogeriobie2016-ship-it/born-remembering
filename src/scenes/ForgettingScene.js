@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { BaseScene } from '../core/SceneManager.js';
-import { TextBlock } from '../core/TextBlock.js';
 import { Orb } from '../core/props.js';
 import { ease, glowTexture } from '../core/util.js';
 import { buildNursery, nurseryArt, HAND_POSES, EYE, INK } from './nursery.js';
@@ -16,7 +15,6 @@ const MEMORY_COLORS = ['#ffcf6b', '#5fa8e8', '#f0b8a0', '#d9485f', '#c8b3e0'];
  */
 export class ForgettingScene extends BaseScene {
   skipTo = 'choice';
-  textStyle = INK;
 
   async enter() {
     const { ctx } = this;
@@ -54,16 +52,13 @@ export class ForgettingScene extends BaseScene {
     await this.wait(1.5);
     await this.say(FORGETTING.lines[0], { hold: 1.2 });
 
-    const hint = this.add(new TextBlock([FORGETTING.memoryHint], { size: 0.065, italic: false, ...INK }));
-    hint.position.set(0, EYE - 0.12, -1.35);
-    hint.reveal(this, { perWord: 0.06 });
+    this.say(FORGETTING.memoryHint, { narrate: false, hold: 3 });
 
     // Memories float in, weaker each time.
     const count = FORGETTING.memories.length;
     for (let i = 0; i < count; i++) {
       const strength = 1 - i / count;
       await this.memory(FORGETTING.memories[i], MEMORY_COLORS[i % MEMORY_COLORS.length], strength, i);
-      if (i === 0) hint.fadeOut(this, 1);
       if (i === 1) this.say(FORGETTING.lines[1], { hold: 1 });
       if (i === 3) this.say(FORGETTING.lines[2], { hold: 1.5 });
     }

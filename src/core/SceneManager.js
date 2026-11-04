@@ -12,8 +12,8 @@ import { Subtitle } from './Subtitle.js';
  */
 export class BaseScene {
   showReticle = true;
-  /** TextBlock style for say() — e.g. dark ink on bright scenes: { color, glow }. */
-  textStyle = null;
+  /** Walkable area, set in enter(): { center: [x, z], radius, blockers: [{ x, z, r }], floorY }. Null = no walking. */
+  walkArea = null;
 
   constructor(ctx) {
     this.ctx = ctx;
@@ -73,10 +73,15 @@ export class BaseScene {
     return a;
   }
 
-  /** Narration: floating subtitle that follows your gaze + optional voice. Resolves when both end. */
-  say(text, opts) {
-    if (!this.subtitle) this.subtitle = this.add(new Subtitle(this.ctx.camera));
-    return Promise.all([this.subtitle.show(this, text, { ...this.textStyle, ...opts }), this.ctx.narrator.speak(text)]);
+  /**
+   * A line of narration: a small subtitle that follows your gaze, plus the voice.
+   * `narrate: false` for instructions, which are read but not spoken. Resolves when it has been said.
+   */
+  say(text, { hold, narrate = true, force = false } = {}) {
+    const { ctx } = this;
+    if (!this.subtitle) this.subtitle = this.add(new Subtitle(ctx.camera, { prefs: ctx.prefs, isXR: () => ctx.renderer.xr.isPresenting }));
+    const speech = narrate ? ctx.narrator.speak(text) : null;
+    return this.subtitle.show(this, text, { speech, hold, force });
   }
 
   enter() {}
@@ -145,6 +150,10 @@ export class SceneManager {
     } catch (err) {
       console.error(`[scene ${id}] enter failed`, err);
     }
+    ctx.locomotion.setArea(scene.walkArea);
+    ctx.interact.env = { floorY: scene.walkArea?.floorY ?? 0, blockers: scene.walkArea?.blockers ?? [] };
+    ctx.locomotion.recenter();
+    ctx.interact.setHandsVisible(!!scene.walkArea);
     scene.ready = true; // update() waits for this: async enter() may still be loading art
     this.onChange?.(id);
     if (opts.hold) await ctx.scheduler.wait(opts.hold);
@@ -179,6 +188,8 @@ export class SceneManager {
       a.parent?.remove(a);
     }
     ctx.input.clear();
+    ctx.interact.clear();
+    ctx.locomotion.setArea(null);
     ctx.scene.remove(scene.root);
     disposeObject(scene.root);
     this.current = null;

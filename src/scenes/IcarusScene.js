@@ -1,11 +1,10 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { BaseScene } from '../core/SceneManager.js';
-import { TextBlock, wrap } from '../core/TextBlock.js';
 import { ease, lerp } from '../core/util.js';
 import { softMaterial } from '../core/look.js';
 import { engravedSky, engravedSea } from '../core/engraved.js';
-import { loadArt, cutout, cartouche, SCROLL_INK } from '../core/collage.js';
+import { loadArt, cutout } from '../core/collage.js';
 import { GiantHand } from './nursery.js';
 
 // Scene 3 — Icarus (Ovid, Metamorphoses VIII). A past life.
@@ -309,38 +308,6 @@ export class IcarusScene extends BaseScene {
     this.sun = new THREE.DirectionalLight('#fff0d6', 1.8);
     this.root.add(this.hemi, this.sun);
 
-    this.scroll = this.add(cartouche(3.4, 1.3));
-    this.scroll.position.set(1.8, 0.45, -3.8);
-    this.scroll.lookAt(0, 0.45, 0);
-    this.words = null;
-  }
-
-  /** Write `text` on the scroll (replacing what was there), hold, then let it fade. */
-  async scrollSay(text, source, hold = 3) {
-    if (this.words) this.drop(this.words);
-    const block = new TextBlock(wrap(text, 34), { size: 0.085, lineHeight: 1.42, ...SCROLL_INK });
-    block.position.copy(this.scroll.position).add(new THREE.Vector3(0, source ? 0.07 : 0, 0));
-    block.quaternion.copy(this.scroll.quaternion);
-    block.translateZ(0.01);
-    this.add(block);
-    this.words = block;
-    let src = null;
-    if (source) {
-      src = new TextBlock([source], { size: 0.045, italic: false, color: '#6b4a2c', glow: null, float: 0.3 });
-      src.position.copy(this.scroll.position).add(new THREE.Vector3(0, -block.height / 2 - 0.02, 0));
-      src.quaternion.copy(this.scroll.quaternion);
-      src.translateZ(0.012);
-      this.add(src);
-    }
-    await this.tween(0.8, (k) => (this.scroll.material.opacity = Math.max(this.scroll.material.opacity, k)));
-    this.ctx.narrator.speak(text);
-    await block.reveal(this, { perWord: 0.13, fade: 0.8, linePause: 0.15 });
-    if (src) src.reveal(this, { perWord: 0.1, fade: 0.8 });
-    await this.wait(hold);
-    await Promise.all([block.fadeOut(this, 1.2), src ? src.fadeOut(this, 1.2) : null]);
-    this.drop(block);
-    if (src) this.drop(src);
-    if (this.words === block) this.words = null;
   }
 
   async start() {
@@ -354,9 +321,8 @@ export class IcarusScene extends BaseScene {
     // They fly in together. The father's warning; the fishermen look up.
     this.flying = true;
     await this.wait(1.5);
-    await this.scrollSay(M.warning, M.source, 2.5);
-    await this.scrollSay(M.onlookers, null, 2);
-    this.tween(1.5, (k) => (this.scroll.material.opacity = 1 - k));
+    await this.say(M.warning, { hold: 1.5 });
+    await this.say(M.onlookers, { hold: 1.5 });
 
     // The boy climbs toward the sun; the father falls behind.
     this.climbing = true;
@@ -403,15 +369,10 @@ export class IcarusScene extends BaseScene {
 
     // His father calls. You fall.
     for (const h of this.myHands) h.targetCurl = 0.9;
-    this.scroll.position.set(-1.2, 0.9, -3.4);
-    this.scroll.lookAt(0, 0.9, 0);
-    this.scrollSay(M.lament, null, 2.5);
+    this.say(M.lament, { hold: 0.6 }).then(() => this.say(C.fragment, { narrate: false, hold: 1.5 }));
     audio.muffleMusic(600, 2.5);
     audio.fadeMusic(0.35, 2.5);
     audio.fade(this.wind, 0.95, 2);
-    const fragment = this.add(new TextBlock(wrap(C.fragment, 26), { size: 0.12, lineHeight: 1.5, color: '#ffffff', glow: 'rgba(10,40,90,0.85)' }));
-    fragment.position.set(0, 0.6, -2.4);
-    this.wait(1.2).then(() => fragment.reveal(this, { perWord: 0.3, fade: 1.0, linePause: 0.2 }));
     const a0 = this.alt;
     this.tween(2, (k) => (this.whiteout = lerp(0.85, 0.08, k)), ease.out);
     this.tween(5, (k) => {

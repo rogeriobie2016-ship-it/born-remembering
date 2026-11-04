@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { BaseScene } from '../core/SceneManager.js';
-import { TextBlock } from '../core/TextBlock.js';
 import { ease, glowTexture } from '../core/util.js';
 import { softMaterial, paintedTexture, bakeGradient } from '../core/look.js';
 import { loadArt, cutout, cartouche, ScrollWriter } from '../core/collage.js';
@@ -415,8 +414,6 @@ export class EndHoldScene extends BaseScene {
 
     // Everything unlocks.
     if (this.shade) this.tween(3, (k) => this.shade.setOpacity(1 - k));
-    const fragment = this.add(new TextBlock([T.fragment], { size: 0.2, lineHeight: 1.4 }));
-    fragment.position.set(0, SEATED + 0.15, -3);
     this.flood.position.set(0, SEATED, 0);
     audio.playMusic('moonlight', { volume: 0.85, fade: 5 });
     this.say(T.lines[3], { hold: 2 });
@@ -429,8 +426,7 @@ export class EndHoldScene extends BaseScene {
       haze.set({ amount: 0.12 + 0.88 * k * k, blur: 0.5 + k * 3 });
     }, ease.in);
     await this.wait(1.5);
-    await fragment.reveal(this, { perWord: 0.35, fade: 1.2 });
-    await this.wait(3.5);
+    await this.say(T.fragment, { narrate: false, hold: 2.5 });
     this.next('afterlife', { ending: 'hold' }, { color: '#ffffff', out: 2.5, in: 2 });
   }
 

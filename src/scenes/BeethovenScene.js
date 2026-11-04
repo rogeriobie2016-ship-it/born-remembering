@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { BaseScene } from '../core/SceneManager.js';
-import { TextBlock, wrap } from '../core/TextBlock.js';
 import { Dust } from '../core/props.js';
 import { glowTexture, ease, lerp, clamp } from '../core/util.js';
 import { softMaterial, inkOutlineAll, bakeGradient, paintedTexture } from '../core/look.js';
@@ -159,9 +158,6 @@ export class BeethovenScene extends BaseScene {
     this._buildLyre();
     this._buildVision();
 
-    const B = ctx.content.BEETHOVEN;
-    this.hint = this.add(new TextBlock(wrap(B.hint, 40), { size: 0.045, italic: false, color: '#e9dcc4', float: 0.4 }));
-    this.hint.position.set(0, 1.5, -1.6);
 
     this.scroll = this.add(cartouche(1.7, 0.75));
     this.scroll.position.set(1.15, 1.85, -2.4);
@@ -342,7 +338,7 @@ export class BeethovenScene extends BaseScene {
     const keysHit = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.12, 0.28), new THREE.MeshBasicMaterial({ visible: false }));
     keysHit.position.set(0, KEY_TOP + 0.03, KEY_Z);
     this.root.add(keysHit);
-    this.ctx.input.add(keysHit, { onSelect: () => this.press() });
+    this.ctx.input.add(keysHit, { onSelect: () => this.press(), highlight: false });
   }
 
   _buildCandles() {
@@ -586,7 +582,7 @@ export class BeethovenScene extends BaseScene {
     await this.wait(1.2);
     await this.writer.say(B.open, { hold: 2 });
 
-    const hintShown = this.hint.reveal(this, { perWord: 0.08, fade: 0.8 });
+    this.say(B.hint, { narrate: false, hold: 3 });
     if (!(await this.until(() => this.presses >= 1, 14))) {
       // Nobody played: the hands play by themselves so the beat still reads.
       for (let i = 0; i < 3; i++) {
@@ -594,7 +590,6 @@ export class BeethovenScene extends BaseScene {
         await this.wait(0.7);
       }
     }
-    hintShown.then(() => this.hint.fadeOut(this, 1));
     await this.until(() => this.presses >= 4, 10);
     await this.writer.say(B.feel, { hold: 1.5 });
     await this.until(() => this.presses >= 7, 6);

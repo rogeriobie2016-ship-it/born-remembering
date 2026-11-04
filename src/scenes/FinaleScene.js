@@ -1,11 +1,10 @@
 import * as THREE from 'three';
 import { BaseScene } from '../core/SceneManager.js';
-import { TextBlock } from '../core/TextBlock.js';
 import { Dust, Orb } from '../core/props.js';
 import { cry } from '../core/synth.js';
 import { glowTexture, lerp } from '../core/util.js';
 import { paintedTexture } from '../core/look.js';
-import { loadArt, cartouche, ScrollWriter } from '../core/collage.js';
+import { loadArt } from '../core/collage.js';
 
 // Scene 10 — every life at once (Iliad VI: "men come and go as leaves").
 // The montage cuts through the paintings of every past life — Venus, Hector and
@@ -13,7 +12,6 @@ import { loadArt, cartouche, ScrollWriter } from '../core/collage.js';
 // each a gilded oval on a ground of old paper, while olive and laurel leaves fall
 // through all of them. Then white, a newborn's cry, and the whole poem once more.
 
-const DIST = 3.2;
 
 /** The lives, in order: [art dir, file, paper ground]. */
 const LIVES = [
@@ -144,7 +142,7 @@ export class FinaleScene extends BaseScene {
 
   async enter(params = {}) {
     const { ctx } = this;
-    const { FINALE, POEM } = ctx.content;
+    const { FINALE } = ctx.content;
     this.ending = params.ending === 'letgo' ? 'letgo' : 'hold';
     const cold = this.ending === 'letgo';
     ctx.scene.background = new THREE.Color('#000000');
@@ -168,19 +166,6 @@ export class FinaleScene extends BaseScene {
         return m;
       });
 
-    this.words = FINALE.flash.map((w) => {
-      const block = new TextBlock([w], {
-        size: 0.17,
-        float: 0,
-        color: cold ? '#e4ecf5' : '#fff8ee',
-        glow: 'rgba(0,0,0,0.85)',
-      });
-      block.position.set(0, -0.95, -2.2);
-      block.setOpacity(1);
-      this.root.add(block);
-      return block;
-    });
-
     this.leaves = this.add(new Leaves());
 
     // Compile every material now (all visible for one pass), so the cuts never stutter.
@@ -191,15 +176,6 @@ export class FinaleScene extends BaseScene {
     this._showCut(-1);
 
     this.dust = this.add(new Dust({ count: 400, opacity: 0, speed: 0.01, color: cold ? '#dfe8f5' : '#fff4e0' }));
-
-    this.scroll = this.add(cartouche(2.6, 1.0));
-    this.scroll.position.set(0, 0.25, -DIST);
-    this.writer = new ScrollWriter(this, this.scroll, { size: 0.09, wrapAt: 36 });
-
-    this.poem = this.add(new TextBlock(POEM.stanza, { size: 0.15, lineHeight: 1.65 }));
-    this.poem.position.set(0, 0.3, -DIST);
-    this.attrib = this.add(new TextBlock([POEM.attribution], { size: 0.06, italic: false, color: '#b9b2a6', glow: null, float: 0.3 }));
-    this.attrib.position.set(0, this.poem.position.y - this.poem.height / 2 - 0.22, -DIST);
 
     this.orbs = [
       { label: FINALE.again, to: 'prologue', color: '#ffe9c2', x: -0.45 },
@@ -218,12 +194,11 @@ export class FinaleScene extends BaseScene {
 
   _showCut(i) {
     this.cuts.forEach((c, j) => (c.visible = j === i));
-    for (const w of this.words) w.visible = false;
     if (this.cuts[i]) this.ctx.scene.background = new THREE.Color(this.cuts[i].userData.bg);
   }
 
   async start() {
-    const { audio, fader, narrator, content } = this.ctx;
+    const { audio, fader, content } = this.ctx;
     const { FINALE, POEM, MYTHS } = content;
     const cold = this.ending === 'letgo';
     const n = this.cuts.length;
@@ -234,13 +209,11 @@ export class FinaleScene extends BaseScene {
     audio.playMusic('ninth', { volume: 0.75, fade: 0.6 });
     this.tween(2, (k) => (this.leaves.opacity = k));
     const total = n * 2 + 2;
-    let w = 0;
     for (let i = 0; i < total; i++) {
       const cut = i % n;
       this._showCut(cut);
       const m = this.cuts[cut];
       if (m) m.scale.setScalar(1 + (i / total) * 0.15); // each pass a little nearer
-      if (i < n + 3) this.words[w++ % this.words.length].visible = true;
       await this.wait(lerp(0.75, 0.3, i / (total - 1)));
     }
 
@@ -265,18 +238,13 @@ export class FinaleScene extends BaseScene {
       this.dust.material.opacity = 0.35 * k;
     });
     audio.playMusic('moonlight', { volume: 0.6, fade: 4 });
-    await this.writer.say(MYTHS.finale.text, { source: MYTHS.finale.source, hold: 2.5 });
-    await this.writer.hide(1);
+    await this.say(MYTHS.finale.text, { hold: 2 });
     await this.say(FINALE.cycle, { hold: 2 });
     await this.wait(1);
 
     // 3 · The whole poem, once more.
-    for (let i = 0; i < POEM.stanza.length; i++) {
-      await Promise.all([this.poem.revealLine(this, i, { perWord: 0.34, fade: 1.2 }), narrator.speak(POEM.stanza[i])]);
-      await this.wait(0.9);
-    }
-    await this.attrib.reveal(this, { perWord: 0.1, fade: 1.5 });
-    await this.wait(2.5);
+    for (const line of POEM.stanza) await this.say(line, { hold: 0.7 });
+    await this.wait(2);
 
     // 4 · Begin again, or the credits.
     for (const orb of this.orbs) orb.visible = true;

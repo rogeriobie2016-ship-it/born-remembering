@@ -3,7 +3,7 @@ import { BaseScene } from '../core/SceneManager.js';
 import { TextBlock } from '../core/TextBlock.js';
 import { ease } from '../core/util.js';
 import { cry, babble, shush, thump } from '../core/synth.js';
-import { buildNursery, nurseryArt, HAND_POSES, EYE, WINDOW_POS, DOOR_POS, INK } from './nursery.js';
+import { buildNursery, nurseryArt, HAND_POSES, EYE, DOOR_POS, INK } from './nursery.js';
 import { cartouche, ScrollWriter } from '../core/collage.js';
 
 const _cam = new THREE.Vector3();
@@ -31,7 +31,6 @@ export function defineNurserySounds(audio) {
  *  hearing : back from Icarus. A muffled song behind the door — the Sirens calling → the Sirens.
  */
 export class CribScene extends BaseScene {
-  textStyle = INK;
 
   async enter(params) {
     const { ctx } = this;
@@ -88,9 +87,7 @@ export class CribScene extends BaseScene {
     await this.wait(2.5);
     for (const line of CRIB.intro) await this.say(line, { hold: 1.2 });
 
-    this.hint = this.add(new TextBlock([CRIB.hint], { size: 0.065, italic: false, ...INK }));
-    this.hint.position.set(0, EYE - 0.12, -1.35);
-    this.hint.reveal(this, { perWord: 0.05 });
+    this.say(CRIB.hint, { narrate: false, hold: 4 });
     this.listening = true;
 
     // Wait for three tries (or nudge with an automatic cry if nobody tries).
@@ -129,11 +126,10 @@ export class CribScene extends BaseScene {
     this.crying = true;
     const { CRIB } = this.ctx.content;
     const n = this.attempts++;
-    if (this.hint && n === 0) this.hint.fadeOut(this, 1);
 
     this.ctx.camera.getWorldPosition(_cam);
     this.ctx.camera.getWorldDirection(_dir);
-    const words = new TextBlock([CRIB.attempts[n % CRIB.attempts.length]], { size: 0.085, float: 0, ...INK });
+    const words = new TextBlock([CRIB.attempts[n % CRIB.attempts.length]], { size: 0.042, float: 0, ...INK });
     words.position.copy(_cam).addScaledVector(_dir, 1.3);
     words.lookAt(_cam);
     this.add(words);
@@ -231,12 +227,9 @@ export class CribScene extends BaseScene {
     // Look at it (gaze ring) / click it — or it comes for you anyway.
     let chosen = false;
     ctx.input.add(glint, { onSelect: () => (chosen = true) });
-    const hint = this.add(new TextBlock([CRIB.lightHint], { size: 0.1, italic: false, ...INK }));
-    hint.position.copy(WINDOW_POS).add(new THREE.Vector3(0, -1.05, 0.4));
-    hint.reveal(this, { perWord: 0.08 });
+    this.say(CRIB.lightHint, { narrate: false, hold: 4 });
     await this.until(() => chosen, 15);
     ctx.input.remove(glint);
-    hint.fadeOut(this, 0.8);
 
     // It grows, rushes in, becomes the sun.
     this.quiet = true;
@@ -310,12 +303,9 @@ export class CribScene extends BaseScene {
     pulse();
     await this.wait(1);
     await this.say(CRIB.sound, { hold: 1 });
-    const hint = this.add(new TextBlock([CRIB.soundHint], { size: 0.065, italic: false, ...INK }));
-    hint.position.set(0, EYE - 0.12, -1.35);
-    hint.reveal(this, { perWord: 0.08 });
+    this.say(CRIB.soundHint, { narrate: false, hold: 4 });
     await this.until(() => chosen, 18);
     ctx.input.remove(target);
-    hint.fadeOut(this, 0.5);
 
     // Everything goes silent — then black.
     this.silence = true;

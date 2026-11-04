@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { glowTexture } from './util.js';
 import { paintedTexture } from './look.js';
-import { TextBlock, wrap } from './TextBlock.js';
 
 // Mixed media: figures cut out of public-domain paintings stand in the 3D world
 // like a paper theatre; words travel on engraved parchment scrolls.
@@ -102,53 +101,21 @@ export function cartouche(w, h) {
   return m;
 }
 
-/** Ink for words written on a scroll. */
-export const SCROLL_INK = { color: '#3a2616', glow: 'rgba(255,246,226,0.55)' };
-
 /**
- * Writes lines onto a cartouche, one at a time: unroll, reveal word by word (and narrate),
- * hold, fade. Owned by `scene` (cancelled with it).
+ * Lines that used to be written on a scroll are now said, with a subtitle. The sources
+ * of the quotations live in the credits. The scroll itself is no longer shown.
  */
 export class ScrollWriter {
-  constructor(scene, scroll, { size = 0.085, wrapAt = 34 } = {}) {
+  constructor(scene, scroll) {
     this.scene = scene;
-    this.scroll = scroll;
-    this.size = size;
-    this.wrapAt = wrapAt;
-    this.block = null;
+    if (scroll) scroll.visible = false;
   }
 
-  async say(text, { source = null, hold = 3, narrate = true } = {}) {
-    const { scene, scroll } = this;
-    if (this.block) scene.drop(this.block);
-    const block = new TextBlock(wrap(text, this.wrapAt), { size: this.size, lineHeight: 1.42, ...SCROLL_INK });
-    block.position.copy(scroll.position);
-    block.quaternion.copy(scroll.quaternion);
-    block.translateY(source ? 0.07 : 0);
-    block.translateZ(0.01);
-    scene.add(block);
-    this.block = block;
-    let src = null;
-    if (source) {
-      src = new TextBlock([source], { size: this.size * 0.55, italic: false, color: '#6b4a2c', glow: null, float: 0.3 });
-      src.position.copy(scroll.position);
-      src.quaternion.copy(scroll.quaternion);
-      src.translateY(-block.height / 2 - 0.02);
-      src.translateZ(0.012);
-      scene.add(src);
-    }
-    await scene.tween(0.8, (k) => (scroll.material.opacity = Math.max(scroll.material.opacity, k)));
-    if (narrate) scene.ctx.narrator.speak(text);
-    await block.reveal(scene, { perWord: 0.13, fade: 0.8, linePause: 0.15 });
-    if (src) src.reveal(scene, { perWord: 0.1, fade: 0.8 });
-    await scene.wait(hold);
-    await Promise.all([block.fadeOut(scene, 1.2), src ? src.fadeOut(scene, 1.2) : null]);
-    scene.drop(block);
-    if (src) scene.drop(src);
-    if (this.block === block) this.block = null;
+  say(text, { hold = 1.5, narrate = true } = {}) {
+    return this.scene.say(text, { hold, narrate });
   }
 
-  hide(seconds = 1.2) {
-    return this.scene.tween(seconds, (k) => (this.scroll.material.opacity = Math.min(this.scroll.material.opacity, 1 - k)));
+  hide() {
+    return Promise.resolve();
   }
 }

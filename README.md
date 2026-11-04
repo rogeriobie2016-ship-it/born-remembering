@@ -73,6 +73,23 @@ and open `http://localhost:5174` in Quest Browser (localhost counts as secure, s
 **Option C — the live site:** https://rogeriobie2016-ship-it.github.io/born-remembering/ (HTTPS, so WebXR works).
 Every push to `main` runs lint and tests, builds, and redeploys it (`.github/workflows/deploy.yml`).
 
+## Getting around
+
+Scenes that set `walkArea` can be walked in (today: the Sphinx). The others keep you in place on purpose: a baby, a flight, a boat.
+
+| | Move | Turn | Hold things |
+|---|---|---|---|
+| **Quest controllers** | Walk for real; push a stick forward to aim, let go to teleport (or hold the trigger on empty space). Smooth walking on the left stick if turned on | Right stick: 30° steps | Grip or trigger near it; point from afar and it flies to you. Let go to throw |
+| **Quest hands** | Walk for real; pinch on empty space, hold, let go to teleport | Your body | Pinch |
+| **Desktop** | WASD (Shift runs) | Drag, arrow keys | Click to hold, click again to throw |
+| **Phone** | Tap the ground | Move the phone, drag | Tap to hold, tap again to throw |
+
+Left controller in the headset: **X** smooth walking on/off, **Y** subtitles on/off. Both are also in the menu.
+
+For new scenes: `ctx.interact.addGrabbable(obj, opts)` and `ctx.interact.addTouch(obj, opts)` (`src/core/Interact.js`).
+
+Testing without a headset: `npm run dev:http`, then open `http://localhost:5173/?xr` for a simulated Quest 3 (dev server only).
+
 ## Controls (same everywhere)
 
 | | Look | Choose |
