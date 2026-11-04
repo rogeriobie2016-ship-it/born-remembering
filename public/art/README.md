@@ -8,7 +8,12 @@ too (`CREDITS` in `src/content.js`).
 | Original (`art/src/`) | Work | Licence / source | Used as |
 |---|---|---|---|
 | `sphinx-moreau.jpg` | Gustave Moreau, *Oedipus and the Sphinx*, 1864 (21.134.1) | CC0 · The Metropolitan Museum of Art | `sphinx/`: sphinx (the pair, cut out), gorge (the painting with the figures lifted out, the gap filled from its own sky and rock), rock, figtree |
-| `primavera.jpg` | Sandro Botticelli, *Primavera*, c. 1480 (Uffizi) | Public domain · Google Art Project via Commons | `garden/`: graces, mercury, flora, zephyr-chloris, venus-primavera, cupid, meadow, grove |
+| `persephone-crane.jpg` | Walter Crane, *The Fate of Persephone*, 1877 | Public domain · Commons | `persephone/`: rapture (traced by hand), maidens, meadow, orchard, grove-tufts (its narcissi) |
+| `proserpina-rubens.jpg` | Peter Paul Rubens, *The Rape of Proserpina*, 1636–38 (Prado) | Public domain · Commons | `persephone/rubens-plate` (printed in the book) |
+| `charon-dore.jpg` | Gustave Doré, Charon, plate 10 of Dante's *Inferno*, 1861 | Public domain · Commons | `persephone/`: dore-sky, dore-hill, dore-crowd, dore-bank, dore-water (layers of the pop-up) |
+| `proserpine-rossetti.jpg` | Dante Gabriel Rossetti, *Proserpine*, 1874 (Tate) | Public domain · Google Art Project via Commons | `persephone/proserpine` |
+| `persephone-leighton.jpg` | Frederic Leighton, *The Return of Persephone*, 1891 | Public domain · Commons | `persephone/`: return, demeter |
+| `primavera.jpg` | Sandro Botticelli, *Primavera*, c. 1480 (Uffizi) | Public domain · Google Art Project via Commons | `garden/`: graces, mercury, flora, zephyr-chloris, venus-primavera, cupid, meadow, grove; `persephone/`: grove-crown (its leaves, one by one; oranges turned to pomegranates), grove-bark |
 | `venus.jpg` | Sandro Botticelli, *The Birth of Venus*, c. 1485 (Uffizi) | Public domain · Google Art Project via Commons | `garden/`: venus, zephyr-aura, hora, sea |
 | `hector-tischbein.jpg` | J. H. W. Tischbein, *Hector's Farewell to Andromache*, 1812 | Public domain · Commons | `crib/`: hector, andromache-face |
 | `hector-hayez.jpg` | Francesco Hayez, *Hector Greets Andromache and Astyanax* | Public domain · Commons | `crib/`: hayez, troy-view |

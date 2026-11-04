@@ -269,6 +269,7 @@ export class Input {
     }
 
     for (const o of this.extraHover.keys()) if (this.targets.has(o)) hovered.add(o);
+    if (this.capture) hovered.clear(); // something is in the hand: nothing glows, least of all that
 
     const glows = (o) => o.userData.interactive?.highlight;
     for (const o of this.hovered) {

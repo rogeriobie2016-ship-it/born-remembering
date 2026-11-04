@@ -108,12 +108,17 @@ const ui = setupUI({
   isMobile,
   platform,
   xrReady,
+  onAction: () => interact.runHeldAction(),
   onBegin: begin,
   onPause: setPaused,
   onRestart: () => begin({ scene: 'prologue' }),
 });
 
 input.onTip = ui.setTip;
+interact.onActionChange = ui.setAction;
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'KeyE') interact.runHeldAction();
+});
 manager.onChange = () => ui.showControls(!!manager.current?.walkArea, manager.id === 'title' || manager.id === 'credits');
 
 renderer.xr.addEventListener('sessionstart', () => {

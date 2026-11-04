@@ -22,6 +22,8 @@ const _axis = new THREE.Vector3();
  *  - addGrabbable(obj, opts): grip or pinch it near your hand, or point at it from afar and it
  *    flies to you; let go and it falls, bounces and rolls. Flat screens: click to hold, click to throw.
  *  - addTouch(obj, opts): reacts when a hand enters it (or when clicked on a flat screen).
+ *  - addHandle(obj, opts): something to pull (a page corner, a paper tab). Grabbed near, it
+ *    follows the hand; clicked, or pointed at from afar, it just happens.
  * Haptics on touch and on grab. Hover glow comes from `input`.
  */
 export class Interact {
@@ -29,6 +31,10 @@ export class Interact {
     Object.assign(this, { renderer, camera, input });
     this.bodies = new Map();
     this.touches = new Map();
+    this.handles = new Map();
+    this.heldAction = null; // { label, run } offered while something is held on a flat screen
+    this.onActionChange = null;
+    this.actionShown = null;
     this.flatHeld = null;
     this.env = { floorY: 0, blockers: [] };
     this.hands = [];
@@ -110,23 +116,55 @@ export class Interact {
   }
 
   /** opts: radius (m), onTouch(obj), cooldown (s), haptic (0..1) */
-  addTouch(obj, { radius = 0.25, onTouch, cooldown = 1, haptic = 0.4 } = {}) {
+  addTouch(obj, { radius = 0.25, onTouch, cooldown = 1, haptic = 0.4, tip = 'touch' } = {}) {
     const t = { obj, radius, onTouch, cooldown, haptic, wait: 0, inside: false };
     this.touches.set(obj, t);
     this.input.add(obj, {
       dwell: false,
-      tip: 'touch',
+      tip,
       onSelect: () => this._touch(t, null), // a click, a tap, or a ray and trigger from afar
     });
     return obj;
   }
 
+  /**
+   * opts: reach (m), tip (key of UI.tips), onDrag(handWorldPos), onRelease(), onClick().
+   * Near a hand it can be pulled; a click or a far trigger press calls onClick.
+   */
+  addHandle(obj, { reach = 0.25, tip = 'pull', onDrag, onRelease, onClick } = {}) {
+    const t = { obj, reach, onDrag, onRelease, onClick, held: null };
+    this.handles.set(obj, t);
+    this.input.add(obj, { dwell: false, tip, onSelect: () => onClick?.() });
+    return obj;
+  }
+
+  /** While something is held on a flat screen, offer this as a button (E on a keyboard). */
+  setHeldAction(label, run) {
+    this.heldAction = label ? { label, run } : null;
+  }
+
+  /** The button was pressed. */
+  runHeldAction() {
+    if (this.flatHeld && this.heldAction) this.heldAction.run(this.flatHeld.obj);
+  }
+
+  /** Is anything held near `pos` (world)? Returns the object, for things like bringing it to the mouth. */
+  heldNear(pos, distance) {
+    for (const h of this.hands) {
+      if (!h.held) continue;
+      h.held.obj.getWorldPosition(_a);
+      if (_a.distanceTo(pos) < distance) return h.held.obj;
+    }
+    return null;
+  }
+
   remove(obj) {
     const b = this.bodies.get(obj);
-    if (b?.held) b.held.held = null;
+    if (b?.held && b.held !== 'flat') b.held.held = null;
     if (this.flatHeld === b) this._flatLetGo();
     this.bodies.delete(obj);
     this.touches.delete(obj);
+    this.handles.delete(obj);
     this.input.remove(obj);
   }
 
@@ -135,10 +173,13 @@ export class Interact {
     this._flatLetGo();
     for (const h of this.hands) {
       h.held = null;
+      h.handle = null;
       h.near = null;
     }
     this.bodies.clear();
     this.touches.clear();
+    this.handles.clear();
+    this.heldAction = null;
     this.env = { floorY: 0, blockers: [] };
     this.setHandsVisible(false);
   }
@@ -172,7 +213,19 @@ export class Interact {
   }
 
   _press(h, button) {
-    if (h.held || !h.tracked) return;
+    if (h.held || h.handle || !h.tracked) return;
+    for (const t of this.handles.values()) {
+      if (t.held) continue;
+      t.obj.getWorldPosition(_a);
+      if (_a.distanceTo(h.pos) < t.reach) {
+        t.held = h;
+        h.handle = t;
+        h.button = button;
+        if (button === 'select') h.state.grabbing = true;
+        this._pulse(h, 0.5, 40);
+        return;
+      }
+    }
     let b = this._nearest(h);
     let pull = 0;
     if (!b) {
@@ -209,6 +262,14 @@ export class Interact {
       queueMicrotask(() => (h.state.grabbing = false));
     }
     if (h.held && h.button === button) this._release(h);
+    if (h.handle && h.button === button) this._letGoHandle(h);
+  }
+
+  _letGoHandle(h) {
+    const t = h.handle;
+    h.handle = null;
+    t.held = null;
+    t.onRelease?.();
   }
 
   _release(h) {
@@ -249,8 +310,10 @@ export class Interact {
     } else h.tracked = false;
     if (!h.tracked) {
       if (h.held) this._release(h);
+      if (h.handle) this._letGoHandle(h);
       return;
     }
+    if (h.handle) h.handle.onDrag?.(h.pos);
 
     h.samples.push({ x: h.pos.x, y: h.pos.y, z: h.pos.z, t: performance.now() / 1000 });
     if (h.samples.length > SAMPLES) h.samples.shift();
@@ -325,6 +388,12 @@ export class Interact {
 
   update(dt) {
     for (const t of this.touches.values()) t.wait = Math.max(0, t.wait - dt);
+
+    const action = this.flatHeld && this.heldAction ? this.heldAction.label : null;
+    if (action !== this.actionShown) {
+      this.actionShown = action;
+      this.onActionChange?.(action);
+    }
     if (this.xr) for (const h of this.hands) this._updateHand(h, dt);
 
     const f = this.flatHeld;

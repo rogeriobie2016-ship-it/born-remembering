@@ -21,7 +21,7 @@ Jowett (Plato, *Republic*), and J. G. Frazer (Apollodorus, *Library*, 1921). All
 1. Title, then the Sphinx (onboarding), then Garden, then Crib (birth).
 2. Icarus, then Crib (hearing).
 3. Sirens, then Orpheus, then Beethoven.
-4. Medusa, then the Choice.
+4. Medusa, then Persephone's Garden, then Hades, then the Choice.
 5. Holding On *or* Letting Go.
 6. Afterlife, then Every Life at Once, then begin again or Credits.
 
@@ -177,6 +177,51 @@ Title in 3D: *We are born remembering, / but we learn to forget.*
 - > "He saw everywhere, along the fields and the roads, statues of men and wild beasts turned into stone from their natural form, at the sight of Medusa." — *Metamorphoses* IV
 - > "From the reflection on the brass of the shield which his left hand bore, he beheld the visage of the horrible Medusa."
 - > "In the polished bronze she saw a face she had never seen. It was her own. And she, too, became stone." — a retelling
+
+---
+
+## 7b · Persephone's Garden
+**Myth:** Persephone and Hades (*Homeric Hymn to Demeter*).
+**What happens:** a garden you can walk in. Trees answer your hand: they shake, shed petals, sometimes let a fruit fall. Pomegranates can be picked, held and thrown. Then the earth opens in front of you and the chariot rises and takes her, while you watch. The light goes. A pomegranate glows on the great tree. Bring one to your mouth (or burst one on the ground) and you are her, and the ground lets you down.
+**Interactions:** shake a tree; pick, hold and throw a fruit; taste it. On a flat screen: click a tree, click a fruit, click again to throw, E or the button to taste.
+**Paintings:**
+- Walter Crane, *The Fate of Persephone* (1877): the chariot, the maidens, the narcissi and the turf underfoot, the far orchard.
+- Sandro Botticelli, *Primavera* (c. 1480): every leaf of the grove was lifted out one by one and laid into the crowns; the oranges were ripened to pomegranates. Bark from its trunks.
+
+**Text:**
+- *A garden with no winter in it. You have been here before.*
+- > "She was playing with the deep-bosomed daughters of Oceanus and gathering flowers over a soft meadow." — *Hymn to Demeter*
+- > "The wide-pathed earth yawned there in the plain of Nysa."
+- *The flowers are still open. No one is there.*
+- > "He secretly gave her sweet pomegranate seed to eat."
+- *One seed. And now you are her.*
+
+---
+
+## 7c · Hades (the pop-up book)
+**Myth:** Persephone in the underworld (*Homeric Hymn to Demeter*); Charon and the Styx.
+**What happens:** a giant book lies shut on a dark floor. It opens at your feet and layers of cut paper stand up from the page. You can walk on it. Flames lean away from you and the shades step aside: you are still warm. Pull a paper tab and something hidden comes out; take the gold ribbon (or the page's corner) and pull to turn the page.
+- Page 1: the Styx in layers, from Doré; the Rubens plate printed at your feet. Tab: the ferryman comes across.
+- Page 2: the asphodel fields and the shades. Tab: Cerberus.
+- Page 3: Rossetti's Proserpine under a paper arch. Tab: the king, behind her, in black paper.
+- Page 4: the paper turns pale and the light comes down: Demeter, and Persephone led back up by Hermes.
+
+**Paintings:**
+- Gustave Doré, Charon, plate 10 of Dante's *Inferno* (1861): cut into the sky, hill, crowd, bank and water layers.
+- Peter Paul Rubens, *The Rape of Proserpina* (1636–38): printed on the page.
+- William Blake, *Cerberus* (1824–27).
+- Dante Gabriel Rossetti, *Proserpine* (1874).
+- Frederic Leighton, *The Return of Persephone* (1891).
+
+**Text:**
+- *The dead keep their stories in a book. It opens for you.*
+- *The ferryman has never once looked back.*
+- *They step away from you. You are still warm.*
+- > "This realm rings with the triple-throated baying of vast Cerberus, couched huge in the cavern opposite." — Virgil, *Aeneid* VI
+- *This is where she sits, half of every year.*
+- > "He secretly gave her sweet pomegranate seed to eat." — *Hymn to Demeter*
+- > "When the earth shall bloom with the fragrant flowers of spring in every kind, then from the realm of darkness and gloom thou shalt come up once more."
+- *And you forget this, too.*
 
 ---
 

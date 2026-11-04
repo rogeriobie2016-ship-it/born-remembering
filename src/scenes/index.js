@@ -6,6 +6,8 @@ import { IcarusScene } from './IcarusScene.js';
 import { SirensScene } from './SirensScene.js';
 import { OrpheusScene } from './OrpheusScene.js';
 import { MedusaScene } from './MedusaScene.js';
+import { PersephoneScene } from './PersephoneScene.js';
+import { HadesScene } from './HadesScene.js';
 import { AfterlifeScene } from './AfterlifeScene.js';
 import { BeethovenScene } from './BeethovenScene.js';
 import { ForgettingScene } from './ForgettingScene.js';
@@ -16,7 +18,7 @@ import { FinaleScene } from './FinaleScene.js';
 import { CreditsScene } from './CreditsScene.js';
 
 // Flow:
-// title → sphinx → prologue → crib{birth} → icarus → crib{hearing} → sirens → orpheus → beethoven → medusa → choice
+// title → sphinx → prologue → crib{birth} → icarus → crib{hearing} → sirens → orpheus → beethoven → medusa → persephone → hades → choice
 //   → endHold | endLetGo → afterlife{ending} (Styx, Elysium, Lethe) → finale{ending} → (begin again → prologue) | credits
 export const SCENES = {
   title: TitleScene,
@@ -27,6 +29,8 @@ export const SCENES = {
   sirens: SirensScene,
   orpheus: OrpheusScene,
   medusa: MedusaScene,
+  persephone: PersephoneScene,
+  hades: HadesScene,
   afterlife: AfterlifeScene,
   beethoven: BeethovenScene,
   forgetting: ForgettingScene,
@@ -38,4 +42,4 @@ export const SCENES = {
 };
 
 // Used by the N (skip) key when a scene sets no `skipTo`.
-export const ORDER = ['title', 'sphinx', 'prologue', 'crib', 'icarus', 'sirens', 'orpheus', 'beethoven', 'medusa', 'choice', 'endHold', 'afterlife', 'finale', 'credits'];
+export const ORDER = ['title', 'sphinx', 'prologue', 'crib', 'icarus', 'sirens', 'orpheus', 'beethoven', 'medusa', 'persephone', 'hades', 'choice', 'endHold', 'afterlife', 'finale', 'credits'];

@@ -94,7 +94,7 @@ function grottoGeometry() {
 }
 
 export class MedusaScene extends BaseScene {
-  skipTo = 'choice';
+  skipTo = 'persephone';
 
   async enter() {
     const { ctx } = this;
@@ -328,7 +328,7 @@ export class MedusaScene extends BaseScene {
     );
     await this.writer.say(M.self, { source: M.selfSource, hold: 2.5 });
     await this.wait(0.5);
-    this.next('choice', {}, { color: '#000000', out: 2.5, in: 2 });
+    this.next('persephone', {}, { color: '#000000', out: 2.5, in: 2 });
   }
 
   onSelectNothing() {}

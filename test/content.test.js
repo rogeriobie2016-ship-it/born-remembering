@@ -33,8 +33,8 @@ describe('content', () => {
   });
 
   it('words every device-specific instruction for each device', () => {
-    const { SPHINX, CRIB, BEETHOVEN } = content;
-    for (const hint of [SPHINX.look, SPHINX.choose, SPHINX.walk, SPHINX.grab, CRIB.hint, CRIB.lightHint, CRIB.soundHint, BEETHOVEN.hint, content.UI.howTo]) {
+    const { SPHINX, CRIB, BEETHOVEN, PERSEPHONE, HADES } = content;
+    for (const hint of [SPHINX.look, SPHINX.choose, SPHINX.walk, SPHINX.grab, CRIB.hint, CRIB.lightHint, CRIB.soundHint, BEETHOVEN.hint, PERSEPHONE.hintTree, PERSEPHONE.hintFruit, PERSEPHONE.taste, HADES.turn, HADES.tab, content.UI.howTo]) {
       for (const p of ['desktop', 'phone', 'xr']) expect(nonEmpty(hint[p])).toBe(true);
     }
   });

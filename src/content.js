@@ -24,9 +24,9 @@ export const POEM = {
 
 // Interface (tela inicial e botões da tela).
 export const UI = {
-  subtitle: 'An immersive memory in nine scenes',
+  subtitle: 'An immersive memory in fourteen scenes',
   begin: 'Begin',
-  headphones: 'Headphones recommended · about 12 minutes',
+  headphones: 'Headphones recommended · about 16 minutes',
   howTo: {
     desktop: 'Drag to look around. Click whatever glows. In open places, walk with WASD or click the ground.',
     phone: 'Move your phone, or drag, to look around. Tap whatever glows. In open places, tap the ground to walk.',
@@ -44,7 +44,7 @@ export const UI = {
     },
   },
   // Beside the mouse pointer.
-  tips: { choose: 'Click', pick: 'Click to pick up', touch: 'Click to touch' },
+  tips: { choose: 'Click', pick: 'Click to pick up', touch: 'Click to touch', shake: 'Click to shake', pull: 'Click to pull', turn: 'Click to turn the page' },
   tipThrow: { desktop: 'Click to throw', phone: 'Tap to throw' },
   narrationOn: 'Narration: on',
   narrationOff: 'Narration: off',
@@ -132,6 +132,37 @@ export const ICARUS = {
   fragment: '’Tis better to have loved and lost',
 };
 
+// Perséfone: o jardim. `fruit` pode ser 'pomegranate' ou 'apple'.
+export const PERSEPHONE = {
+  fruit: 'pomegranate',
+  enter: 'A garden with no winter in it. You have been here before.',
+  hintTree: { desktop: 'Click a tree to shake it', phone: 'Tap a tree to shake it', xr: 'Touch a tree — it answers' },
+  hintFruit: {
+    desktop: 'Click a fruit to pick it. Click again to throw it',
+    phone: 'Tap a fruit to pick it. Tap again to throw it',
+    xr: 'Reach up and grip a fruit. Let go to throw it',
+  },
+  taken: 'The flowers are still open. No one is there.',
+  taste: {
+    desktop: 'Pick a fruit, and taste it',
+    phone: 'Pick a fruit, and taste it',
+    xr: 'Pick a fruit, and bring it to your mouth',
+  },
+  tasteButton: 'Taste it (E)',
+  you: 'One seed. And now you are her.',
+};
+
+// O Hades: o livro pop-up.
+export const HADES = {
+  open: 'The dead keep their stories in a book. It opens for you.',
+  turn: { desktop: 'Click the gold ribbon to turn the page', phone: 'Tap the gold ribbon to turn the page', xr: 'Take the gold ribbon and pull the page across — or point and pull the trigger' },
+  tab: { desktop: 'Pull the paper tab — click it', phone: 'Pull the paper tab — tap it', xr: 'Take the paper tab and pull it toward you' },
+  crossing: 'The ferryman has never once looked back.',
+  shades: 'They step away from you. You are still warm.',
+  queen: 'This is where she sits, half of every year.',
+  close: 'And you forget this, too.',
+};
+
 // 4 · Beethoven
 export const BEETHOVEN = {
   open: 'Silence. You have not heard a sound in years.',
@@ -189,6 +220,15 @@ export const MYTHS = {
     fall: 'So the Sphinx threw herself from the citadel.',
     source: 'Library III · Apollodorus',
     motif: 'Moreau’s gorge at dusk: the Sphinx clings to Oedipus on the ledge. She asks you the riddle of the three ages of a life; the answer is the life you are about to live.',
+  },
+  // Hugh G. Evelyn-White's translation of the Homeric Hymn to Demeter (1914), public domain.
+  persephone: {
+    flowers: 'She was playing with the deep-bosomed daughters of Oceanus and gathering flowers over a soft meadow.',
+    opens: 'The wide-pathed earth yawned there in the plain of Nysa.',
+    seed: 'He secretly gave her sweet pomegranate seed to eat.',
+    spring: 'When the earth shall bloom with the fragrant flowers of spring in every kind, then from the realm of darkness and gloom thou shalt come up once more.',
+    source: 'Homeric Hymn to Demeter',
+    motif: 'A garden to walk in: trees that answer your hand, pomegranates to pick and throw. Crane’s chariot rises from the ground and takes her. You taste a seed, and you are her. The underworld is a giant pop-up book made from Doré’s engraving; its last page lets you come up.',
   },
   prologue: {
     text: 'O Muses, tell me — for you are goddesses and are in all places so that you see all things, while we know nothing but by report.',
@@ -297,6 +337,8 @@ export const CHAPTERS = [
   { label: 'Orpheus and Eurydice', scene: 'orpheus' },
   { label: 'Beethoven', scene: 'beethoven' },
   { label: 'Medusa', scene: 'medusa' },
+  { label: 'Persephone’s Garden', scene: 'persephone' },
+  { label: 'Hades', scene: 'hades' },
   { label: 'The Choice', scene: 'choice' },
   { label: 'Holding On', scene: 'endHold' },
   { label: 'Letting Go', scene: 'endLetGo' },
@@ -311,7 +353,7 @@ export const CREDITS = [
   { role: 'Poem', names: ['Alfred, Lord Tennyson', 'In Memoriam A.H.H., canto XXVII (1850)'] },
   {
     role: 'Myths',
-    names: ['Homer, The Iliad and The Odyssey — trans. Samuel Butler', 'Ovid, Metamorphoses — trans. H. T. Riley', 'Virgil, Aeneid — trans. Theodore C. Williams', 'Plato, Republic — trans. Benjamin Jowett', 'Apollodorus, Library — trans. J. G. Frazer'],
+    names: ['Homer, The Iliad and The Odyssey — trans. Samuel Butler', 'Ovid, Metamorphoses — trans. H. T. Riley', 'Virgil, Aeneid — trans. Theodore C. Williams', 'Plato, Republic — trans. Benjamin Jowett', 'Apollodorus, Library — trans. J. G. Frazer', 'Homeric Hymn to Demeter — trans. Hugh G. Evelyn-White'],
   },
   { role: 'Music', names: ['Ludwig van Beethoven'] },
   {
@@ -345,6 +387,11 @@ export const CREDITS = [
       'Rudolf Hausleithner — Beethoven’s Vision, 1882',
       'Caravaggio — Medusa, c. 1597',
       'Edward Burne-Jones — The Baleful Head, 1885',
+      'Walter Crane — The Fate of Persephone, 1877',
+      'Peter Paul Rubens — The Rape of Proserpina, 1636–38',
+      'Gustave Doré — Charon, Dante’s Inferno, 1861',
+      'Dante Gabriel Rossetti — Proserpine, 1874',
+      'Frederic Leighton — The Return of Persephone, 1891',
       'Joachim Patinir — Crossing the River Styx, c. 1520',
       'Arnold Böcklin — Isle of the Dead, 1883',
       'William Blake — Cerberus (Dante’s Inferno), 1824–27',

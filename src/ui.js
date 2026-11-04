@@ -11,7 +11,7 @@ const CONTROLS_SECONDS = 9;
  *   onPause(paused)    the menu opened / closed
  *   onRestart()
  */
-export function setupUI({ content, renderer, audio, narrator, look, prefs, isMobile, platform, xrReady, onBegin, onPause, onRestart }) {
+export function setupUI({ content, renderer, audio, narrator, look, prefs, isMobile, platform, xrReady, onAction, onBegin, onPause, onRestart }) {
   const { UI, TITLE, CHAPTERS, CREDITS } = content;
   let started = false;
 
@@ -193,6 +193,8 @@ export function setupUI({ content, renderer, audio, narrator, look, prefs, isMob
   let controlsTimer = 0;
   const tipEl = $('tip');
   const controlsEl = $('controls-hint');
+  const actionEl = $('action-btn');
+  actionEl.addEventListener('click', onAction);
 
   return {
     /** The small guide at the bottom of a flat screen, for a few seconds in each scene. */
@@ -203,6 +205,11 @@ export function setupUI({ content, renderer, audio, narrator, look, prefs, isMob
       controlsEl.textContent = text;
       controlsEl.classList.toggle('shown', !!text);
       if (text) controlsTimer = setTimeout(() => controlsEl.classList.remove('shown'), CONTROLS_SECONDS * 1000);
+    },
+    /** A big button while you hold something that can be used. */
+    setAction(label) {
+      actionEl.textContent = label || '';
+      actionEl.classList.toggle('shown', !!label);
     },
     /** Beside the mouse pointer; with no mouse (a phone holding something), low on the screen. */
     setTip(key, x, y) {

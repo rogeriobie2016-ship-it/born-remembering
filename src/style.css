@@ -229,6 +229,18 @@ h2 {
   opacity: 1 !important;
 }
 
+#action-btn {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom) + 62px);
+  translate: -50% 0;
+  z-index: 16;
+  display: none;
+}
+#action-btn.shown {
+  display: block;
+}
+
 #tip,
 #controls-hint {
   position: fixed;
