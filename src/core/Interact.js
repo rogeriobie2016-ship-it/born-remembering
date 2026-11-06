@@ -1,6 +1,4 @@
 import * as THREE from 'three';
-import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
-import { XRHandModelFactory } from 'three/addons/webxr/XRHandModelFactory.js';
 import { stepBody, throwVelocity } from './walk.js';
 
 const REACH = 0.07; // how far past an object's radius a hand can grab it
@@ -40,19 +38,12 @@ export class Interact {
     this.hands = [];
     this.handsVisible = false;
 
-    const controllerModels = new XRControllerModelFactory();
-    const handModels = new XRHandModelFactory();
     for (let i = 0; i < 2; i++) {
       const grip = renderer.xr.getControllerGrip(i);
       const hand = renderer.xr.getHand(i);
       const state = input.controllers[i];
-      const controllerModel = controllerModels.createControllerModel(grip);
-      const handModel = handModels.createHandModel(hand, 'mesh');
-      controllerModel.visible = handModel.visible = false;
-      grip.add(controllerModel);
-      hand.add(handModel);
       parent.add(grip, hand);
-      const h = { i, state, grip, hand, controllerModel, handModel, pos: new THREE.Vector3(), quat: new THREE.Quaternion(), tracked: false, held: null, samples: [], near: null };
+      const h = { i, state, grip, hand, pos: new THREE.Vector3(), quat: new THREE.Quaternion(), tracked: false, held: null, samples: [], near: null };
       state.c.addEventListener('selectstart', () => this._press(h, 'select'));
       state.c.addEventListener('selectend', () => this._releaseButton(h, 'select'));
       state.c.addEventListener('squeezestart', () => this._press(h, 'squeeze'));
@@ -65,10 +56,9 @@ export class Interact {
     return this.renderer.xr.isPresenting;
   }
 
-  /** Controllers and hands are only drawn in scenes where they can do something. */
+  /** Whether your own painted hands are drawn (see PlayerHands): scenes turn them off while you are someone else. */
   setHandsVisible(on) {
     this.handsVisible = on;
-    for (const h of this.hands) h.controllerModel.visible = h.handModel.visible = on;
   }
 
   /**

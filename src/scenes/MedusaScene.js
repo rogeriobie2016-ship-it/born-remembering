@@ -351,6 +351,7 @@ export class MedusaScene extends BaseScene {
     // ---- you are Medusa, and you turn to stone ----
     audio.fadeMusic(0, 2);
     for (const h of this.myHands) h.visible = true;
+    ctx.hands.adopt(this.myHands, { free: true });
     this.sound('stone', { volume: 0.9 });
     const stone = new THREE.Color('#8f897f');
     // the shield comes down, and the light finds who held it

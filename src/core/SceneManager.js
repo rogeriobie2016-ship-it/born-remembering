@@ -21,6 +21,7 @@ export class BaseScene {
     this.alive = false;
     this.animated = [];
     this.sounds = [];
+    this.flatHand = true; // on a flat screen, a hand reaches for the mouse (see PlayerHands)
     this.subtitle = null;
   }
 
@@ -162,7 +163,8 @@ export class SceneManager {
     ctx.locomotion.setArea(scene.walkArea);
     ctx.interact.env = { floorY: scene.walkArea?.floorY ?? 0, blockers: scene.walkArea?.blockers ?? [] };
     ctx.locomotion.recenter();
-    ctx.interact.setHandsVisible(!!scene.walkArea);
+    ctx.interact.setHandsVisible(true);
+    ctx.hands.flatHand = scene.flatHand;
     scene.ready = true; // update() waits for this: async enter() may still be loading art
     this.onChange?.(id);
     if (opts.hold) await ctx.scheduler.wait(opts.hold);
@@ -198,6 +200,8 @@ export class SceneManager {
     }
     ctx.input.clear();
     ctx.interact.clear();
+    ctx.hands.release();
+    ctx.hands.look();
     ctx.locomotion.setArea(null);
     ctx.scene.remove(scene.root);
     disposeObject(scene.root);

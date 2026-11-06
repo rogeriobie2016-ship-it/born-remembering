@@ -16,6 +16,7 @@ export class ChoiceScene extends BaseScene {
 
   async enter() {
     const { ctx } = this;
+    ctx.hands.look({ skin: '#f2cdb4', scale: 0.5 }); // a baby's
     ctx.rig.position.set(0, EYE, 0);
     const bg = new THREE.Color('#efe4d6');
     ctx.scene.background = bg;

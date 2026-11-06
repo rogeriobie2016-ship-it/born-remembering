@@ -341,6 +341,8 @@ export class EndHoldScene extends BaseScene {
     this.babyHand.visible = true;
     this.babyHand.targetCurl = 0.2;
     this.holding = [n.motherHand, this.babyHand];
+    ctx.hands.look({ skin: '#f2cdb4', scale: 0.5 });
+    ctx.hands.adopt([null, this.babyHand], { reach: 0.04, lift: 0.03 });
 
     this.flood = this.add(new MemoryFlood());
     this.pulse = 0;
@@ -376,6 +378,8 @@ export class EndHoldScene extends BaseScene {
     this.bed = buildBedchamber(this.art);
     this.add(this.bed.group, this.bed.hers, this.bed.yours);
     this.holding = [this.bed.hers, this.bed.yours];
+    this.ctx.hands.look();
+    this.ctx.hands.adopt([null, this.bed.yours], { reach: 0.12, lift: 0.08 });
     scene.background = new THREE.Color('#0c0a10');
     rig.position.set(0, SEATED, 0);
     haze.set({ amount: 0.12, color: '#ffe6c8', blur: 0.5, saturate: 0.85 });

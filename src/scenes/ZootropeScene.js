@@ -202,6 +202,7 @@ function floorTexture() {
 export class ZootropeScene extends BaseScene {
   showReticle = false;
   skipTo = 'sphinx';
+  flatHand = false;
 
   async enter(params = {}) {
     const { ctx } = this;

@@ -486,6 +486,7 @@ export class OrpheusScene extends BaseScene {
     if (this.embrace) this.embrace.visible = false;
     ctx.locomotion.setArea(null); // you do not walk any more: you are being taken
     ctx.interact.setHandsVisible(false); // these hands are hers
+    ctx.hands.adopt(this.myHands, { reach: 0.14, lift: 0.08 });
     ctx.camera.getWorldPosition(head);
     const fwd = dir.clone();
     const at = (d, side, y) => new THREE.Vector3(head.x + fwd.x * d - fwd.z * side, y, head.z + fwd.z * d + fwd.x * side);
@@ -646,8 +647,6 @@ export class OrpheusScene extends BaseScene {
         for (let i = 0; i < 2; i++) {
           const H = hands[i];
           if (!H?.tracked) continue;
-          const hand = this.myHands[H.state?.source?.handedness === 'left' ? 0 : 1];
-          hand.position.copy(this.me.worldToLocal(_a.copy(H.pos)));
           if (H.pos.distanceTo(head) > 0.5 && Math.random() < dt * 2) this._reachOut();
         }
       }

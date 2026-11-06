@@ -15,6 +15,7 @@ const TOP = 1.55;
 /** Rolling credits (after the finale, or from the menu). Click / tap / trigger speeds it up. */
 export class CreditsScene extends BaseScene {
   skipTo = 'prologue';
+  flatHand = false;
 
   enter() {
     const { ctx } = this;

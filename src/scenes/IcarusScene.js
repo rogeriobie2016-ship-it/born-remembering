@@ -745,6 +745,7 @@ export class IcarusScene extends BaseScene {
     // ---- you are Icarus ----
     await fader.fade(1, 0.6, '#ffffff');
     this.ctx.interact.setHandsVisible(false); // now they are his
+    this.ctx.hands.adopt(this.myHands, { reach: 0.14, lift: 0.08 });
     this.icarus.visible = false;
     this.me.visible = true;
     for (const p of this.puffs || []) p.m.visible = false;
@@ -864,9 +865,6 @@ export class IcarusScene extends BaseScene {
           const vy = (H.pos.y - (this._lastY?.[i] ?? H.pos.y)) / Math.max(dt, 1e-3);
           (this._lastY ||= [])[i] = H.pos.y;
           if (vy < -1.1) this._beat();
-          const hand = this.myHands[H.state?.source?.handedness === 'left' ? 0 : 1];
-          hand.position.copy(this.me.worldToLocal(_v.copy(H.pos)));
-          hand.quaternion.copy(H.quat).multiply(_q2.setFromAxisAngle(X, -Math.PI / 2));
         });
       }
       this.beatWait = Math.max(0, (this.beatWait || 0) - dt);

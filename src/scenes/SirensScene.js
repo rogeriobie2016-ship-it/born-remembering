@@ -353,6 +353,7 @@ export class SirensScene extends BaseScene {
     this.myRock.visible = true;
     this.world.position.y = -2.2; // you stand on your rock now
     this.me.visible = true;
+    this.ctx.hands.adopt(this.myHands, { free: true });
     for (const s of this.songs) audio.fade(s, 0, 0.5);
     this.mine = await this.sound('siren-song', { loop: true, volume: 0 });
     audio.fade(this.mine, 1, 1.5);

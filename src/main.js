@@ -7,6 +7,8 @@ import { Grain } from './core/Grain.js';
 import { Input } from './core/Input.js';
 import { Locomotion } from './core/Locomotion.js';
 import { Interact } from './core/Interact.js';
+import { PlayerHands } from './core/PlayerHands.js';
+import { GiantHand } from './scenes/nursery.js';
 import { Prefs } from './core/Prefs.js';
 import { LookControls } from './core/LookControls.js';
 import { AudioSystem } from './core/AudioSystem.js';
@@ -55,11 +57,12 @@ const prefs = new Prefs();
 const input = new Input({ renderer, scene, camera, rig: offset, settings: content.SETTINGS });
 const locomotion = new Locomotion({ renderer, scene, camera, rig, offset, input, look, prefs });
 const interact = new Interact({ renderer, camera, input, parent: offset });
+const hands = new PlayerHands({ renderer, camera, input, interact, parent: offset, makeHand: (side) => new GiantHand({ side }) });
 const audio = new AudioSystem(camera, content.AUDIO);
 const narrator = new Narrator(content.SETTINGS);
 
 const platform = () => (renderer.xr.isPresenting || isQuest ? 'xr' : isMobile ? 'phone' : 'desktop');
-const ctx = { renderer, scene, rig, camera, scheduler, fader, haze, grain, look, input, locomotion, interact, prefs, audio, narrator, content, isMobile, platform };
+const ctx = { renderer, scene, rig, camera, scheduler, fader, haze, grain, look, input, locomotion, interact, hands, prefs, audio, narrator, content, isMobile, platform };
 const manager = new SceneManager(ctx, SCENES, ORDER);
 ctx.manager = manager;
 locomotion.onToggle = (key) => {
@@ -211,7 +214,9 @@ renderer.setAnimationLoop(() => {
   input.update(dt);
   locomotion.update(dt);
   interact.update(dt);
+  hands.pre();
   manager.update(dt, scheduler.time);
+  hands.post(dt, scheduler.time);
   renderer.render(scene, camera);
   if (DEBUG) updateDebug(dt);
 });

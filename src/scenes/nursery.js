@@ -265,6 +265,9 @@ export class GiantHand extends THREE.Group {
     super();
     this.curl = 0.15;
     this.targetCurl = 0.15;
+    this.curlRate = 4;
+    this.curlOverride = null; // your own fingers, when a controller or a tracked hand says so
+    this.curlBoost = 0;
     const geo = new THREE.PlaneGeometry(HAND_W, HAND_H, 1, 36);
     geo.translate(HAND_W * (0.5 - PALM_U), HAND_H * (0.5 - PALM_V), 0);
     const mat = paintedLight(
@@ -338,8 +341,13 @@ export class GiantHand extends THREE.Group {
     this.rotation.set(...rot);
   }
 
+  setSkin(skin) {
+    handTint(skin, this.skinMat.color);
+  }
+
   update(t, dt) {
-    this.curl = lerp(this.curl, this.targetCurl, Math.min(1, dt * 4));
+    const want = this.curlOverride ?? Math.min(1, this.targetCurl + this.curlBoost);
+    this.curl = lerp(this.curl, want, Math.min(1, dt * this.curlRate));
     this._curlU.value = Math.max(0, this.curl + Math.sin(t * 1.3) * 0.02);
   }
 }

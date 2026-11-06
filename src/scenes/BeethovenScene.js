@@ -393,6 +393,7 @@ export class BeethovenScene extends BaseScene {
       h.targetCurl = 0.45;
       this.add(h);
     });
+    this.ctx.hands.adopt(this.hands, { reach: 0.26, lift: 0.05 });
 
     // The loved one's hand: comes in from the right and rests on yours.
     this.lovedHand = this.add(new GiantHand({ side: 1, scale: 1, sleeve: '#5a3550', skin: '#f0c9ab' }));
@@ -614,7 +615,8 @@ export class BeethovenScene extends BaseScene {
     await this.breakthrough();
 
     await this.wait(2.5);
-    this.lovedHand.moveTo(this, this.lovedPose.pos, this.lovedPose.rot, 3.2, ease.out);
+    // she finds your hand wherever it is
+    this.lovedHand.moveTo(this, this.hands[1].position.clone().add(new THREE.Vector3(0.03, 0.03, -0.01)), this.lovedPose.rot, 3.2, ease.out);
     await this.wait(1.5);
     this.hands[1].targetCurl = 0.6; // your fingers close a little under hers
     await this.writer.say(B.hand, { hold: 1.5 });

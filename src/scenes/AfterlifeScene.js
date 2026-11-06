@@ -288,6 +288,7 @@ export class AfterlifeScene extends BaseScene {
       this.add(h);
       return h;
     });
+    ctx.hands.adopt(this.myHands, { reach: 0.1, lift: 0.06 });
     this.obol = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.006, 32), [
       softMaterial({ color: '#b9a46a', rim: '#fff3c8', rimStrength: 0.7, hatch: 0 }),
       new THREE.MeshLambertMaterial({ map: obolTexture() }),

@@ -39,6 +39,7 @@ export class CribScene extends BaseScene {
     this.attempts = 0;
     this.crying = false;
 
+    ctx.hands.look({ skin: '#f2cdb4', scale: 0.5 }); // a baby's
     ctx.rig.position.set(0, EYE, 0);
     ctx.look.reset(0, 0.15); // flat screens: start looking slightly up, at the adults
     const fogColor = new THREE.Color('#efe4d6');

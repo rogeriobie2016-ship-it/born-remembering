@@ -263,6 +263,8 @@ export class EndLetGoScene extends BaseScene {
     this.babyHand = this.add(new GiantHand({ side: 1, skin: '#f2cdb4', sleeve: '#f3ebe0', scale: 0.5 }));
     this.babyHand.place(new THREE.Vector3(-0.03, 0.655, -0.5), [-0.5, 0, 0.1]);
     this.babyHand.visible = true;
+    ctx.hands.look({ skin: '#f2cdb4', scale: 0.5 });
+    ctx.hands.adopt([null, this.babyHand], { reach: 0.04, lift: 0.03 });
 
     this.lids = new Eyelids();
     ctx.camera.add(this.lids);
@@ -315,6 +317,8 @@ export class EndLetGoScene extends BaseScene {
     this.nursery = null;
     this.old = buildLoggia(this.art);
     this.add(this.old.group, ...this.old.hands);
+    this.ctx.hands.look({ skin: '#d9b293', scale: 1 });
+    this.ctx.hands.adopt(this.old.hands, { reach: 0.1, lift: 0.04 });
     scene.background = SKY.horizon[0].clone();
     scene.fog = null;
     rig.position.set(0, SEATED, 0);

@@ -22,6 +22,7 @@ export class ForgettingScene extends BaseScene {
   async enter() {
     const { ctx } = this;
     ctx.rig.position.set(0, EYE, 0);
+    ctx.hands.look({ skin: '#f2cdb4', scale: 0.5 }); // a baby's
     const bg = new THREE.Color('#efe4d6');
     ctx.scene.background = bg;
     ctx.scene.fog = new THREE.Fog(bg, 2, 10);
