@@ -7,4 +7,6 @@ art/src/*.jpg
 art/src/*.jpeg
 art/src/*.png
 art/src/*.tif
+# sculpture scans (hundreds of MB); art/tools/scan.mjs reduces them to public/art/scans
+*.stl
 __pycache__/

@@ -32,7 +32,7 @@ too (`CREDITS` in `src/content.js`).
 | `psyche-bouguereau.jpg` | William-Adolphe Bouguereau, *The Abduction of Psyche*, 1895 | Public domain · Commons | `psyche/`: rapture, rapture-back; `zoetrope/` |
 | `orpheus-corot.jpg` | Camille Corot, *Orpheus Leading Eurydice from the Underworld*, 1861 | Public domain · Google Art Project via Commons | `orpheus/`: grove, grove-crown (his leaves), grove-tufts, grove-ground, shades-a, shades-b |
 | `orpheus-rubens.jpg` | Peter Paul Rubens, *Orpheus and Eurydice*, 1636–38 (Prado) | Public domain · Commons | `orpheus/`: couple, orpheus (Pluto's foot painted out with her own drapery) |
-| `orpheus-leighton.jpg` | Frederic Leighton, *Orpheus and Eurydice*, 1864 | Public domain · Commons | `orpheus/leighton` |
+| `orpheus-leighton.jpg` | Frederic Leighton, *Orpheus and Eurydice*, 1864 | Public domain · Commons | `orpheus/leighton`; `crib/hand` (Orpheus's hand and arm, its shadows lifted: every hand in the piece) and `crib/linen` (her gown), both by `art/tools/hands.py` |
 | `beethoven-vision.jpg` | Rudolf Hausleithner, *Beethoven's Vision*, 1882 | Public domain · Commons | `orpheus/`: muses, beethoven; `beethoven/vision` (the whole painting, framed on the wall) |
 | `medusa-caravaggio.jpg` | Caravaggio, *Medusa*, c. 1597 (Uffizi) | Public domain · Commons | `medusa/shield` |
 | `medusa-burnejones.jpg` | Edward Burne-Jones, *The Baleful Head*, 1885 | Public domain · Commons | `medusa/baleful-head` |

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { BaseScene } from '../core/SceneManager.js';
 import { ease, lerp, glowTexture } from '../core/util.js';
-import { softMaterial, paintedTexture, ENGRAVE_GLSL } from '../core/look.js';
+import { softMaterial, paintedTexture } from '../core/look.js';
 import { loadArt, cutout, groundShadow } from '../core/collage.js';
 
 // Scene 1 — The Garden. Before birth, the soul stands in Botticelli's night garden
@@ -89,7 +89,6 @@ export class PrologueScene extends BaseScene {
         fragmentShader: /* glsl */ `
           uniform float dawn;
           varying vec3 vDir;
-          ${ENGRAVE_GLSL}
           void main() {
             vec3 d = normalize(vDir);
             float e = asin(clamp(d.y, -1.0, 1.0));
@@ -103,9 +102,6 @@ export class PrologueScene extends BaseScene {
             dawnCol = mix(dawnCol, vec3(1.0, 0.98, 0.93), streak * 0.25);
             dawnCol += vec3(1.0, 0.82, 0.66) * pow(max(dot(d, normalize(vec3(-0.75, 0.15, -0.65))), 0.0), 5.0) * 0.22;
             vec3 col = mix(nightCol, dawnCol, dawn);
-            // engraved sky: horizontal lines, heavier toward the zenith
-            float ink = hatchLine(degrees(e) * 1.4, mix(0.02, 0.12, smoothstep(0.15, 1.2, e)) * dawn);
-            col = mix(col, vec3(0.3, 0.42, 0.46), ink * 0.45);
             gl_FragColor = vec4(col, 1.0);
             #include <colorspace_fragment>
           }`,

@@ -2,13 +2,13 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { glowTexture, lerp, ease } from '../core/util.js';
 import { softMaterial, lightShaftMaterial, bindShaft, paintedTexture, bakeGradient } from '../core/look.js';
-import { loadArt, cutout, groundShadow } from '../core/collage.js';
+import { loadArt, cutout, groundShadow, paintedLight } from '../core/collage.js';
 
 // The baby's room, shared by the crib, forgetting and choice scenes.
 // A Trojan chamber: frescoed walls over a terracotta dado, Greek-key friezes,
 // Doric columns at a loggia opening onto Hayez's view of Troy, a real Attic amphora,
 // and the parents painted — Hector by Tischbein, Andromache's veiled face.
-// Viewer sits in the crib: eye at EYE metres, looking down -Z, through the bars.
+// Viewer lies in a nest of linen: eye at EYE metres, looking down -Z, with the whole room around.
 // Look: "window light" — the window is the only real source; everything is soft and backlit.
 
 export const EYE = 0.75;
@@ -33,7 +33,6 @@ const PAL = {
   shadow: '#9c7b67',
 };
 
-/** A giant adult hand + forearm. Fingers point +Y, palm faces +Z (local). */
 /**
  * Hector's helmet, modelled: a Corinthian bronze with eye-holes and cheek-pieces, and the horsehair
  * crest that frightened the child. Height about 0.55 m. `fade(k)` brings it in.
@@ -224,64 +223,96 @@ export function buildHelmet() {
   return group;
 }
 
+// The painted hand: Orpheus's, cut from Leighton's canvas (art/tools/hands.py). Sizes in metres at scale 1.
+const HAND_W = 0.2771;
+const HAND_H = 0.4648;
+const PALM_U = 0.7422;
+const PALM_V = 0.7182;
+const KNUCKLE = 0.044; // above the palm's centre; the fingers bend from here
+const CURL_RATE = 19; // radians per metre of finger, at curl 1
+const SKIN_REF = new THREE.Color('#d9b293');
+
+/** What a hand of this skin colour multiplies the painting by. */
+export function handTint(skin, target = new THREE.Color()) {
+  const c = new THREE.Color(skin);
+  return target.setRGB(c.r / SKIN_REF.r, c.g / SKIN_REF.g, c.b / SKIN_REF.b);
+}
+
+let _handTex = null;
+function handTexture() {
+  if (_handTex) return _handTex;
+  _handTex = new THREE.TextureLoader().load(`${import.meta.env.BASE_URL}art/crib/hand.webp`);
+  _handTex.colorSpace = THREE.SRGBColorSpace;
+  _handTex.anisotropy = 8;
+  return _handTex;
+}
+
+const _handInv = new THREE.Matrix4();
+const _handBasis = new THREE.Matrix4();
+const _handN = new THREE.Vector3();
+const _handU = new THREE.Vector3();
+const _handR = new THREE.Vector3();
+const _handUp = new THREE.Vector3(0, 1, 0);
+const _handBias = new THREE.Vector3(0, 0, 0.18);
+
+/**
+ * A giant adult hand and forearm, cut from a painting like everything else in the piece. Fingers point +Y (local).
+ * It is a sheet of card: it keeps its face to you and turns only about the line of the arm, so it never shows you
+ * a sliver, and the fingers fold back along the knuckles as it closes.
+ */
 export class GiantHand extends THREE.Group {
-  constructor({ side = 1, skin = '#e8c2a4', sleeve = '#b98b8b', scale = 2.2, plain = false } = {}) {
+  constructor({ side = 1, skin = '#d9b293', scale = 2.2 } = {}) {
     super();
     this.curl = 0.15;
     this.targetCurl = 0.15;
-    // Skin glows red-orange at the edges, like a hand held up to the light.
-    // fine lines on skin: at hand scale, coarse hatching would read as a net, not as shading
-    const skinMat = softMaterial({ color: skin, rim: '#ffc4a0', rimPower: 2.6, rimStrength: 0.3, hatch: plain ? 0 : 190, umber: '#8a5a40' });
-    this.skinMat = skinMat;
-    const palm = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), skinMat); // children[0]: the skin
-    palm.scale.set(0.047, 0.056, 0.019);
-    this.add(palm);
-    const heel = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), skinMat);
-    heel.scale.set(0.04, 0.03, 0.02);
-    heel.position.set(0.006 * side, -0.035, -0.002);
-    this.add(heel);
+    const geo = new THREE.PlaneGeometry(HAND_W, HAND_H, 1, 36);
+    geo.translate(HAND_W * (0.5 - PALM_U), HAND_H * (0.5 - PALM_V), 0);
+    const mat = paintedLight(
+      new THREE.MeshLambertMaterial({ map: handTexture(), transparent: true, alphaTest: 0.02, side: THREE.DoubleSide, depthWrite: false, premultipliedAlpha: true }),
+      0.6,
+    );
+    handTint(skin, mat.color);
+    const curl = { value: this.curl };
+    const light = mat.onBeforeCompile;
+    mat.onBeforeCompile = (shader, renderer) => {
+      light(shader, renderer);
+      shader.uniforms.handCurl = curl;
+      shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nuniform float handCurl;').replace(
+        '#include <begin_vertex>',
+        `#include <begin_vertex>
+        if (transformed.y > ${KNUCKLE.toFixed(3)} && handCurl > 0.001) {
+          float k = handCurl * ${CURL_RATE.toFixed(1)};
+          float a = (transformed.y - ${KNUCKLE.toFixed(3)}) * k;
+          transformed.y = ${KNUCKLE.toFixed(3)} + sin(a) / k;
+          transformed.z = (cos(a) - 1.0) / k;
+        }`,
+      );
+    };
+    const key = mat.customProgramCacheKey();
+    mat.customProgramCacheKey = () => `${key}-hand`;
+    // scenes turn a hand to stone by these: the card has no rim, the values are simply ignored
+    mat.userData.rim = { rimStrength: { value: 0 }, hatchScale: { value: 0 } };
+    this.skinMat = mat;
+    this._curlU = curl;
 
-    // Fingers in two segments, so they curl like fingers.
-    this.fingers = [];
-    const specs = [
-      [-0.031, 0.048, 0.03, 0.025, 0.0085],
-      [-0.0105, 0.055, 0.036, 0.029, 0.009],
-      [0.0105, 0.053, 0.034, 0.028, 0.0088],
-      [0.03, 0.046, 0.026, 0.022, 0.0078],
-    ];
-    for (const [x, y, l1, l2, r] of specs) {
-      const a = new THREE.Group();
-      a.position.set(x * -side, y, 0);
-      const s1 = new THREE.Mesh(new THREE.CapsuleGeometry(r, l1, 6, 12), skinMat);
-      s1.position.y = l1 / 2 + r * 0.5;
-      const b = new THREE.Group();
-      b.position.y = l1 + r * 0.6;
-      const s2 = new THREE.Mesh(new THREE.CapsuleGeometry(r * 0.92, l2, 6, 12), skinMat);
-      s2.position.y = l2 / 2 + r * 0.4;
-      b.add(s2);
-      a.add(s1, b);
-      this.add(a);
-      this.fingers.push({ a, b });
-    }
-    const thumb = new THREE.Group();
-    thumb.position.set(0.042 * side, -0.01, 0.008);
-    thumb.rotation.z = -0.85 * side;
-    const tm = new THREE.Mesh(new THREE.CapsuleGeometry(0.0105, 0.046, 6, 12), skinMat);
-    tm.position.y = 0.03;
-    thumb.add(tm);
-    this.add(thumb);
-    this.thumb = thumb;
-
-    const wrist = new THREE.Mesh(new THREE.CylinderGeometry(0.029, 0.034, 0.09, 20), skinMat);
-    wrist.position.y = -0.075;
-    this.add(wrist);
-    const sleeveMat = softMaterial({ color: sleeve, rim: '#fff0dc', rimPower: 1.8, rimStrength: 0.35, hatch: plain ? 0 : 220 });
-    const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.038, 0.5, 6, 20), sleeveMat);
-    arm.position.y = -0.36;
-    const cuff = new THREE.Mesh(new THREE.TorusGeometry(0.037, 0.008, 8, 24), sleeveMat);
-    cuff.rotation.x = Math.PI / 2;
-    cuff.position.y = -0.115;
-    this.add(arm, cuff);
+    const sheet = new THREE.Mesh(geo, mat);
+    sheet.raycast = () => {};
+    sheet.frustumCulled = false;
+    sheet.renderOrder = 2;
+    // Faces the eye at the moment of drawing. The thumb stays on the side the pose puts it, seen from either face.
+    sheet.onBeforeRender = (renderer, _scene, camera) => {
+      const eye = renderer.xr.isPresenting ? renderer.xr.getCamera() : camera;
+      _handInv.copy(this.matrixWorld).invert();
+      _handN.setFromMatrixPosition(eye.matrixWorld).applyMatrix4(_handInv).normalize();
+      // a little of the palm's own direction, so a hand pointing straight at you still knows which way is up
+      _handU.copy(_handUp).add(_handBias).addScaledVector(_handN, -(_handN.y + _handBias.z * _handN.z)).normalize();
+      _handR.crossVectors(_handU, _handN);
+      if (_handR.x < 0) _handR.negate();
+      _handR.multiplyScalar(-side);
+      _handBasis.makeBasis(_handR, _handU, _handN);
+      sheet.matrixWorld.multiplyMatrices(this.matrixWorld, _handBasis);
+    };
+    this.add(sheet);
     this.scale.setScalar(scale);
     this.visible = false;
   }
@@ -309,12 +340,7 @@ export class GiantHand extends THREE.Group {
 
   update(t, dt) {
     this.curl = lerp(this.curl, this.targetCurl, Math.min(1, dt * 4));
-    this.fingers.forEach(({ a, b }, i) => {
-      const c = this.curl * (1.0 + i * 0.08) + Math.sin(t * 1.3 + i) * 0.025;
-      a.rotation.x = c * 0.7;
-      b.rotation.x = c * 0.9;
-    });
-    this.thumb.rotation.x = this.curl * 0.6;
+    this._curlU.value = Math.max(0, this.curl + Math.sin(t * 1.3) * 0.02);
   }
 }
 
@@ -377,7 +403,7 @@ export class Adult extends THREE.Group {
 /** Paintings used in the room (loaded once, shared by every nursery scene). */
 let _art = null;
 export function nurseryArt() {
-  return (_art ||= loadArt('crib', ['hector', 'andromache-face', 'amphora', 'hayez', 'fright', 'troy-view']));
+  return (_art ||= loadArt('crib', ['hector', 'andromache-face', 'amphora', 'hayez', 'fright', 'troy-view', 'linen']));
 }
 
 /**
@@ -576,6 +602,31 @@ function starShape(r1, r2) {
 export function buildNursery(art = {}) {
   const group = new THREE.Group();
 
+  // Plaster and boards, brushed: the baked light below is multiplied by this.
+  const plaster = paintedTexture(512, 512, (c, w, h) => {
+    c.fillStyle = '#ecdfcb';
+    c.fillRect(0, 0, w, h);
+    c.lineCap = 'round';
+    for (let i = 0; i < 700; i++) {
+      const x = Math.random() * w;
+      const y = Math.random() * h;
+      const a = (Math.random() - 0.5) * 2.4;
+      const len = 40 + Math.random() * 150;
+      c.strokeStyle = i % 2 ? `rgba(255,250,240,${0.015 + Math.random() * 0.04})` : `rgba(120,84,54,${0.01 + Math.random() * 0.03})`;
+      c.lineWidth = 6 + Math.random() * 30;
+      for (const ox of [-w, 0, w]) {
+        for (const oy of [-h, 0, h]) {
+          c.beginPath();
+          c.moveTo(x + ox, y + oy);
+          c.lineTo(x + ox + Math.cos(a) * len, y + oy + Math.sin(a) * len);
+          c.stroke();
+        }
+      }
+    }
+  });
+  plaster.wrapS = plaster.wrapT = THREE.RepeatWrapping;
+  plaster.repeat.set(4, 4);
+
   // Room shell (inside-out) with baked light: darker low, glowing around the window.
   const shellGeo = bakeGradient(new THREE.BoxGeometry(6, 3.2, 6, 24, 14, 24), {
     low: PAL.wallLow,
@@ -585,7 +636,7 @@ export function buildNursery(art = {}) {
     lift: { at: new THREE.Vector3(WINDOW_POS.x, WINDOW_POS.y - 1.6, WINDOW_POS.z + 0.3), radius: 3.0, color: '#fffbf4', strength: 1 },
   });
   // Baked, not lit: the vertex colours *are* the light, so the room stays luminous and costs nothing.
-  const room = new THREE.Mesh(shellGeo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide }));
+  const room = new THREE.Mesh(shellGeo, new THREE.MeshBasicMaterial({ map: plaster, vertexColors: true, side: THREE.BackSide }));
   room.position.set(0, 1.6, -0.5);
   const floorGeo = new THREE.PlaneGeometry(6, 6, 24, 24);
   floorGeo.rotateX(-Math.PI / 2);
@@ -603,7 +654,7 @@ export function buildNursery(art = {}) {
     }
     floorGeo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
   }
-  const floor = new THREE.Mesh(floorGeo, new THREE.MeshBasicMaterial({ vertexColors: true }));
+  const floor = new THREE.Mesh(floorGeo, new THREE.MeshBasicMaterial({ map: plaster, vertexColors: true }));
   floor.position.set(0, 0.002, -0.5);
   const rug = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.8), new THREE.MeshLambertMaterial({ map: matTexture() }));
   rug.rotation.x = -Math.PI / 2;
@@ -611,7 +662,7 @@ export function buildNursery(art = {}) {
   group.add(room, floor, rug);
 
   // Terracotta dado and Greek-key friezes around the walls.
-  const dadoMat = new THREE.MeshBasicMaterial({ color: '#8e3a28' });
+  const dadoMat = new THREE.MeshBasicMaterial({ color: '#a24a34', map: plaster });
   const keyTex = meanderTexture();
   const walls = [
     // [centre x, centre z, rotY, length]
@@ -798,16 +849,8 @@ export function buildNursery(art = {}) {
   underDoor.position.set(DOOR_POS.x - 0.04, 0.008, DOOR_POS.z);
   group.add(door, knob, underDoor);
 
-  // A wooden chest, a bronze lampstand with an oil flame, an Attic amphora on a plinth.
-  const woodMat = softMaterial({ color: '#7a4f30', rim: '#ffd9a8', rimStrength: 0.3, hatch: 40 });
+  // A bronze lampstand with an oil flame, an Attic amphora on a plinth.
   const bronze = softMaterial({ color: '#a8823f', rim: '#fff0c0', rimStrength: 0.6, hatch: 50 });
-  const dresser = new THREE.Mesh(new RoundedBoxGeometry(1.2, 0.62, 0.55, 3, 0.04), woodMat);
-  dresser.position.set(1.9, 0.31, -3.1);
-  for (const x of [1.4, 2.4]) {
-    const band = new THREE.Mesh(new RoundedBoxGeometry(0.06, 0.64, 0.57, 2, 0.01), bronze);
-    band.position.set(x, 0.31, -3.1);
-    group.add(band);
-  }
   const lampBase = new THREE.Group();
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 1.4, 12), bronze);
   pole.position.y = 0.7;
@@ -847,47 +890,26 @@ export function buildNursery(art = {}) {
   lampGlow.position.copy(shade.position);
   lampGlow.scale.setScalar(0.7);
   lampGlow.raycast = () => {};
-  group.add(dresser, lampBase, shade, lampGlow);
+  group.add(lampBase, shade, lampGlow);
 
-  // Crib: everything rounded, painted white, catching the window light.
-  const crib = new THREE.Group();
-  const white = softMaterial({ color: '#d2b48a', rim: '#fff0d8', rimPower: 2.0, rimStrength: 0.45 }); // olive wood
-  const mattress = new THREE.Mesh(new RoundedBoxGeometry(0.74, 0.12, 1.34, 3, 0.04), softMaterial({ color: '#fbf5ec', emissive: '#3a2c20', rimStrength: 0.2 }));
-  mattress.position.set(0, 0.42, 0.05);
-  const blanket = new THREE.Mesh(new RoundedBoxGeometry(0.72, 0.05, 0.62, 3, 0.022), softMaterial({ color: '#cddbe7', rim: '#fff4e6', rimStrength: 0.35 }));
-  blanket.position.set(0, 0.5, -0.25);
-  crib.add(mattress, blanket);
-  const slatPositions = [];
-  for (let x = -0.32; x <= 0.321; x += 0.08) slatPositions.push([x, -0.62], [x, 0.72]);
-  for (let z = -0.54; z <= 0.65; z += 0.08) slatPositions.push([-0.37, z], [0.37, z]);
-  const slats = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.014, 0.014, 0.62, 14), white, slatPositions.length);
-  const m = new THREE.Matrix4();
-  slatPositions.forEach(([x, z], i) => slats.setMatrixAt(i, m.makeTranslation(x, 0.79, z)));
-  crib.add(slats);
-  for (const [len, x, z, alongZ] of [
-    [0.8, 0, -0.62, false],
-    [0.8, 0, 0.72, false],
-    [1.38, -0.37, 0.05, true],
-    [1.38, 0.37, 0.05, true],
-  ]) {
-    const rail = new THREE.Mesh(new THREE.CapsuleGeometry(0.026, len - 0.05, 6, 16), white);
-    rail.rotation.set(alongZ ? Math.PI / 2 : 0, 0, alongZ ? 0 : Math.PI / 2);
-    rail.position.set(x, 1.1, z);
-    crib.add(rail);
+  // Where you lie: no bars and no frame, only a sheet from Leighton's canvas, heaped a little under you.
+  if (art.linen) {
+    const SHEET_W = 1.7;
+    const SHEET_L = 2.1;
+    const geo = new THREE.PlaneGeometry(SHEET_W, SHEET_L, 18, 22);
+    const p = geo.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i);
+      const y = p.getY(i);
+      p.setZ(i, 0.05 * Math.sin(x * 3.1 + y * 1.3) + 0.035 * Math.sin(y * 5.2 - x * 2.2) - 0.05 * (x * x + y * y));
+    }
+    geo.computeVertexNormals();
+    const sheet = new THREE.Mesh(geo, paintedLight(new THREE.MeshLambertMaterial({ map: art.linen, transparent: true, alphaTest: 0.02, side: THREE.DoubleSide, depthWrite: false, premultipliedAlpha: true }), 0.6));
+    sheet.rotation.x = -Math.PI / 2;
+    sheet.position.set(0, 0.4, -0.1);
+    sheet.raycast = () => {};
+    group.add(sheet);
   }
-  for (const [x, z] of [
-    [-0.37, -0.62],
-    [0.37, -0.62],
-    [-0.37, 0.72],
-    [0.37, 0.72],
-  ]) {
-    const post = new THREE.Mesh(new RoundedBoxGeometry(0.06, 1.1, 0.06, 2, 0.02), white);
-    post.position.set(x, 0.55, z);
-    const finial = new THREE.Mesh(new THREE.SphereGeometry(0.038, 16, 12), white);
-    finial.position.set(x, 1.13, z);
-    crib.add(post, finial);
-  }
-  group.add(crib);
 
   // Mobile: soft moon, stars and clouds in pastels.
   const mobile = new THREE.Group();
@@ -990,16 +1012,13 @@ export function buildNursery(art = {}) {
   };
 }
 
-// Palm up, fingers pointing at the viewer (+Z), tilted up a little: local Y→+Z, local Z→+Y.
-const PALM_UP = new THREE.Euler().setFromRotationMatrix(
-  new THREE.Matrix4().makeBasis(new THREE.Vector3(-1, 0, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 1, 0)),
-);
-PALM_UP.x -= 0.25;
+// Fingers up and leaning toward the viewer.
+const PALM_UP = [0.55, 0, -0.12];
 
 // Hand poses (world space; viewer's eye at (0, EYE, 0)).
 export const HAND_POSES = {
   hidden: (side) => [new THREE.Vector3(0.5 * side, 2.7, -1.0), [Math.PI * 0.55, 0, 0]],
-  reach: (side) => [new THREE.Vector3(0.14 * side, 1.12, -0.62), [Math.PI * 0.62, 0.15 * side, 0]],
-  pat: (side) => [new THREE.Vector3(0.06 * side, 1.12, -0.38), [Math.PI * 0.72, 0, 0]],
-  offer: (side) => [new THREE.Vector3(0.24 * side, 0.8, -0.6), PALM_UP], // palm up, fingers toward you
+  reach: (side) => [new THREE.Vector3(0.12 * side, 1.15, -0.72), [Math.PI * 0.86, 0.15 * side, 0]],
+  pat: (side) => [new THREE.Vector3(0.1 * side, 1.08, -0.52), [Math.PI * 0.84, 0, 0]],
+  offer: (side) => [new THREE.Vector3(0.1 * side, 0.68, -0.62), PALM_UP], // rising from below, open, to be taken
 };

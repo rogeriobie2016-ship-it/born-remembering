@@ -4,6 +4,7 @@ import { Dust } from '../core/props.js';
 import { glowTexture, ease, lerp, clamp } from '../core/util.js';
 import { softMaterial, inkOutlineAll, bakeGradient, paintedTexture } from '../core/look.js';
 import { loadArt, cutout, cartouche, ScrollWriter } from '../core/collage.js';
+import { loadMarble, marbleMaterial } from '../core/marble.js';
 import { thump } from '../core/synth.js';
 import { GiantHand, meanderTexture, framedPainting } from './nursery.js';
 import { nightTexture } from './EndHoldScene.js';
@@ -37,6 +38,7 @@ const LYRE_Y = [1.24, 2.0];
 const PAINT_POS = new THREE.Vector3(-0.6, 2.0, -3.93);
 const PAINT_W = 1.9;
 const MUSES_TO = new THREE.Vector3(-1.2, 2.15, -3.0);
+const POLYHYMNIA = { x: 2.05, z: -3.05, base: 0.34, turn: -0.5 };
 const LID_OPEN = 0.22; // a crack only: wide open, the lid would hide the lyre
 
 const brass = () => softMaterial({ color: '#b08a3e', rim: '#ffe2a0', rimStrength: 0.55, hatch: 0, umber: '#5a3a14' });
@@ -146,8 +148,19 @@ export class BeethovenScene extends BaseScene {
     this.mode = MODES[0];
     this.lyreK = 0;
 
-    const [art, musesArt] = await Promise.all([loadArt('beethoven', ['vision']), loadArt('orpheus', ['muses']), ctx.audio.preload(['ninth', 'thump'])]);
+    const [art, musesArt, polyhymnia] = await Promise.all([loadArt('beethoven', ['vision']), loadArt('orpheus', ['muses']), loadMarble('art/scans/polyhymnia.bin'), ctx.audio.preload(['ninth', 'thump'])]);
     this.art = { ...art, ...musesArt };
+    // Polyhymnia, Muse of the hymn (a real scan): in the dark of the corner until the music comes back and the light reaches her.
+    if (polyhymnia) {
+      const muse = new THREE.Mesh(polyhymnia, marbleMaterial({ color: '#efe3d2', through: '#ffb46a' }));
+      muse.position.set(POLYHYMNIA.x, POLYHYMNIA.base, POLYHYMNIA.z);
+      muse.rotation.y = POLYHYMNIA.turn;
+      muse.raycast = () => {};
+      const plinth = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.46, POLYHYMNIA.base, 24), softMaterial({ color: '#5a4436', rim: '#ffd9a0', rimStrength: 0.2, hatch: 40 }));
+      plinth.position.set(POLYHYMNIA.x, POLYHYMNIA.base / 2, POLYHYMNIA.z);
+      plinth.raycast = () => {};
+      this.add(muse, plinth);
+    }
 
     const sheetTex = manuscriptTexture();
     this._buildRoom(sheetTex);

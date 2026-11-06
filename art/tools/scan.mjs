@@ -1,8 +1,8 @@
-// Canova's Psyche, from the Scan the World photogrammetry (500,000 triangles, CC BY-NC-SA 4.0) to a mesh
-// a headset can walk around: welded, simplified by quadric error, specks dropped, ambient occlusion baked
-// into the vertices, then quantised. The output is an adaptation and keeps the licence (see CREDITS.md).
+// A sculpture scan (binary STL) to a mesh a headset can walk around: welded, simplified by quadric error,
+// specks dropped, ambient occlusion baked into the vertices, then quantised. Each scan's source and licence
+// are in CREDITS.md; an adaptation of a share-alike scan keeps that licence.
 //
-//   node art/tools/canova.mjs <scan.stl> public/art/psyche/canova.bin [triangles]
+//   node --max-old-space-size=8192 art/tools/scan.mjs <scan.stl> <out.bin> [triangles] [height in metres] [up axis: y|z|x|-y|-z|-x] [cut: drop everything below this height, in metres]
 //
 // Output layout (little-endian):
 //   Uint32 vertexCount, Uint32 indexCount, Float32 min[3], Float32 size[3]   (32 bytes, metres)
@@ -10,9 +10,11 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-const [, , inPath, outPath, targetArg] = process.argv;
+const [, , inPath, outPath, targetArg, heightArg, upArg, cutArg] = process.argv;
 const TARGET = Number(targetArg || 90000);
-const REAL_HEIGHT = 1.55; // metres, the Louvre's figure for the group
+const REAL_HEIGHT = Number(heightArg || 1.55); // metres, the museum's figure
+const UP = upArg || 'y';
+const CUT = Number(cutArg || 0); // a museum's socle, say
 
 // ---------- read and weld ----------
 const raw = readFileSync(inPath);
@@ -24,8 +26,10 @@ let o = 84;
 for (let t = 0; t < triCount; t++) {
   o += 12;
   for (let k = 0; k < 3; k++) {
-    const x = raw.readFloatLE(o), y = raw.readFloatLE(o + 4), z = raw.readFloatLE(o + 8);
+    const a = raw.readFloatLE(o), b = raw.readFloatLE(o + 4), c = raw.readFloatLE(o + 8);
     o += 12;
+    // the scan's up axis to +Y, keeping handedness
+    const [x, y, z] = UP === 'y' ? [a, b, c] : UP === 'z' ? [a, c, -b] : UP === 'x' ? [-b, a, c] : UP === '-y' ? [a, -b, -c] : UP === '-z' ? [a, -c, b] : [b, -a, c];
     const key = `${x},${y},${z}`;
     let id = index.get(key);
     if (id === undefined) {
@@ -49,6 +53,8 @@ for (let i = 0; i < nv; i++) {
   minZ = Math.min(minZ, P[i * 3 + 2]); maxZ = Math.max(maxZ, P[i * 3 + 2]);
 }
 const unit = REAL_HEIGHT / (maxY - minY);
+// occlusion is sized to the object, so a head and a colossus take shadow alike
+const SIZE_K = Math.max(maxX - minX, maxY - minY, maxZ - minZ) * unit / 1.55;
 const pos = new Float64Array(nv * 3);
 for (let i = 0; i < nv; i++) {
   pos[i * 3] = (P[i * 3] - (minX + maxX) / 2) * unit;
@@ -58,7 +64,13 @@ for (let i = 0; i < nv; i++) {
 P = null;
 
 // ---------- quadric simplification, after Garland & Heckbert; the threshold sweep of Sp4cerat's FQMS ----------
-let nt = triCount;
+let nt = 0;
+for (let t = 0; t < triCount; t++) {
+  const y = (pos[T0[t * 3] * 3 + 1] + pos[T0[t * 3 + 1] * 3 + 1] + pos[T0[t * 3 + 2] * 3 + 1]) / 3;
+  if (y < CUT) continue;
+  T0[nt * 3] = T0[t * 3]; T0[nt * 3 + 1] = T0[t * 3 + 1]; T0[nt * 3 + 2] = T0[t * 3 + 2];
+  nt++;
+}
 const tv = T0;
 const terr = new Float64Array(nt * 4);
 const tdel = new Uint8Array(nt);
@@ -231,6 +243,7 @@ function retarget(v0, v, dels) {
 }
 
 const start = nt;
+console.log('kept', nt, 'triangles above the cut');
 for (let iter = 0; iter < 200 && start - deleted > TARGET; iter++) {
   if (iter % 5 === 0) updateMesh(iter);
   tdirty.fill(0, 0, nt);
@@ -305,7 +318,7 @@ for (let i = 0; i < N; i++) {
 // ---------- ambient occlusion, per vertex, through a uniform grid ----------
 const mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
 for (let i = 0; i < N; i++) for (let k = 0; k < 3; k++) { mn[k] = Math.min(mn[k], V[i * 3 + k]); mx[k] = Math.max(mx[k], V[i * 3 + k]); }
-const CELL = 0.03;
+const CELL = 0.03 * SIZE_K;
 const dims = [0, 1, 2].map((k) => Math.max(1, Math.ceil((mx[k] - mn[k]) / CELL)));
 const cellOf = (v, k) => Math.max(0, Math.min(dims[k] - 1, Math.floor((v - mn[k]) / CELL)));
 const grid = new Map();
@@ -360,13 +373,13 @@ function hit(ox, oy, oz, dx, dy, dz, tMax) {
 }
 
 const RAYS = 40;
-const REACH = 0.3;
+const REACH = 0.3 * SIZE_K;
 const ao = new Uint8Array(N);
 let seed = 12345;
 const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
 for (let i = 0; i < N; i++) {
   const nx = NR[i * 3], ny = NR[i * 3 + 1], nz = NR[i * 3 + 2];
-  const ox = V[i * 3] + nx * 0.003, oy = V[i * 3 + 1] + ny * 0.003, oz = V[i * 3 + 2] + nz * 0.003;
+  const ox = V[i * 3] + nx * 0.003 * SIZE_K, oy = V[i * 3 + 1] + ny * 0.003 * SIZE_K, oz = V[i * 3 + 2] + nz * 0.003 * SIZE_K;
   // a frame around the normal
   let ax = Math.abs(nx) < 0.8 ? 1 : 0, ay = ax ? 0 : 1;
   const bx = ny * 0 - nz * ay, by = nz * ax - nx * 0, bz = nx * ay - ny * ax;

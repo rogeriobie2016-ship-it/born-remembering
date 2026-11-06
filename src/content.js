@@ -24,7 +24,7 @@ export const POEM = {
 
 // Interface (tela inicial e botões da tela).
 export const UI = {
-  subtitle: 'An immersive memory in fourteen scenes',
+  subtitle: 'An immersive memory in sixteen scenes',
   begin: 'Begin',
   playChapter: 'Play this chapter',
   zootrope: 'Back to the wheel',
@@ -475,7 +475,13 @@ export const CREDITS = [
   },
   {
     role: 'Sculpture',
-    names: ['Antonio Canova, Psyche Revived by Cupid’s Kiss, 1787–93 (Louvre)', 'Scan: Scan The World, CC BY-NC-SA 4.0. Simplified for this piece'],
+    names: [
+      'Antonio Canova, Psyche Revived by Cupid’s Kiss, 1787–93 (Louvre)',
+      'Scan: Scan The World, CC BY-NC-SA 4.0. Simplified for this piece',
+      'Antonio Canova, Perseus with the Head of Medusa, 1804–06 (Metropolitan Museum of Art)',
+      'Scan: Scan The World, CC0',
+      'Casts from the SMK, National Gallery of Denmark: Demeter of Knidos, Dying Gladiator, Polyhymnia, Hypnos, Penelope, and Germain Pilon’s Virgin of Sorrows',
+    ],
   },
   { role: 'Built with', names: ['three.js · WebXR · Web Audio · Web Speech'] },
   { role: 'Typeface', names: ['Cormorant Garamond (SIL Open Font License)'] },

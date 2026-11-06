@@ -6,6 +6,7 @@ import { clamp, ease, glowTexture, lerp } from '../core/util.js';
 import { softMaterial, paintedTexture, lightShaftMaterial, bindShaft } from '../core/look.js';
 import { engravedSky } from '../core/engraved.js';
 import { loadArt, cutout, groundShadow } from '../core/collage.js';
+import { loadMarble, marbleMaterial } from '../core/marble.js';
 import { crunch, leavesWind, birds, rustle, quake } from '../core/ambience.js';
 import { trunkGeometry, crownGeometry, crownMaterial } from '../core/grove.js';
 import { thump } from '../core/synth.js';
@@ -25,6 +26,8 @@ const CENTRE = new THREE.Vector3(0, 0, -5.5); // the tree that matters
 const PETALS = 420;
 const FLOWERS_EACH = 130;
 const RUMBLE = new THREE.Vector3(1.5, 0, -11.5);
+// Demeter of Knidos (a real scan): the mother, seated in the clearing. She is there before it happens, and after.
+const DEMETER = { x: -0.9, z: -4.6, turn: 0.18 };
 
 const DAWN = { top: '#7fa6c8', horizon: '#f4d9b4', hemi: '#f4efd8', sun: '#ffe9c0', ground: '#ffffff', fog: '#d9d3b8' };
 const DUSK = { top: '#1c2238', horizon: '#6a3a44', hemi: '#5a5a78', sun: '#b0533a', ground: '#55506a', fog: '#2c2432' };
@@ -94,8 +97,9 @@ export class PersephoneScene extends BaseScene {
     audio.define('quake', quake);
     audio.define('thump', () => thump());
 
-    const [T] = await Promise.all([loadArt('persephone', ['rapture', 'maidens', 'grove-ground', 'orchard', 'grove-crown', 'grove-bark', 'grove-tufts']), audio.preload(['leaves', 'birds', 'rustle', 'crunch', 'quake', 'thump', 'elise'])]);
+    const [T, demeter] = await Promise.all([loadArt('persephone', ['rapture', 'maidens', 'grove-ground', 'orchard', 'grove-crown', 'grove-bark', 'grove-tufts']), loadMarble('art/scans/demeter.bin'), audio.preload(['leaves', 'birds', 'rustle', 'crunch', 'quake', 'thump', 'elise'])]);
 
+    this.demeterGeo = demeter;
     this.stage = 'roam';
     this.dusk = 0;
     this.shaken = false;
@@ -108,6 +112,7 @@ export class PersephoneScene extends BaseScene {
     this._buildFlowers(T);
     this._buildPetals();
     this._buildMyth(T);
+    this._buildDemeter();
 
     this.hemi = new THREE.HemisphereLight(DAWN.hemi, '#55663a', 1.25);
     this.sun = new THREE.DirectionalLight(DAWN.sun, 1.7);
@@ -117,7 +122,10 @@ export class PersephoneScene extends BaseScene {
     this.walkArea = {
       center: [0, -3],
       radius: AREA_RADIUS,
-      blockers: this.trees.map((t) => ({ x: t.position.x, z: t.position.z, r: 0.32 * t.scale.x })),
+      blockers: [
+        ...this.trees.map((t) => ({ x: t.position.x, z: t.position.z, r: 0.32 * t.scale.x })),
+        ...(this.demeter ? [{ x: DEMETER.x, z: DEMETER.z, r: 0.75 }] : []),
+      ],
     };
     applyTint(this, 0);
   }
@@ -372,6 +380,21 @@ export class PersephoneScene extends BaseScene {
     }
   }
 
+  _buildDemeter() {
+    if (!this.demeterGeo) return;
+    this.demeter = new THREE.Group();
+    this.demeter.position.set(DEMETER.x, 0, DEMETER.z);
+    this.demeter.rotation.y = DEMETER.turn;
+    this.demeterMat = marbleMaterial({ color: '#f4eee2', through: '#ffb98a', shadow: '#2c2620' });
+    // when the garden goes dark she keeps a little of the day in her
+    this.demeterMat.userData.marble.heart.value.set(DEMETER.x, 1.15, DEMETER.z + 0.25, 0);
+    this.demeterMat.userData.marble.heartColor.value.set('#ffbf8a');
+    const fig = new THREE.Mesh(this.demeterGeo, this.demeterMat);
+    fig.raycast = () => {};
+    this.demeter.add(fig, groundShadow(1.9));
+    this.add(this.demeter);
+  }
+
   _buildMyth(T) {
     // the maidens at play, across the meadow
     if (T.maidens) {
@@ -423,7 +446,7 @@ export class PersephoneScene extends BaseScene {
         const x = head.x + Math.sin(yaw + dy) * d;
         const z = head.z + Math.cos(yaw + dy) * d;
         let score = 99;
-        for (const t of this.trees) {
+        for (const t of this.demeter ? [...this.trees, this.demeter] : this.trees) {
           // how far is each trunk from the line between you and the chariot?
           const k = clamp(((t.position.x - head.x) * (x - head.x) + (t.position.z - head.z) * (z - head.z)) / (d * d), 0, 1);
           score = Math.min(score, Math.hypot(t.position.x - head.x - (x - head.x) * k, t.position.z - head.z - (z - head.z) * k));
@@ -536,6 +559,7 @@ export class PersephoneScene extends BaseScene {
     super.update(dt, t);
     this.sky.u.time.value = t;
     applyTint(this, this.dusk);
+    if (this.demeterMat) this.demeterMat.userData.marble.heart.value.w = 0.14 * this.dusk;
 
     for (const tree of this.trees) {
       const u = tree.userData;

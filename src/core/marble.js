@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 
-// Marble: a mesh made by art/tools/canova.mjs, and a material for it. Stone that takes the light of one
+// Marble: a mesh made by art/tools/scan.mjs, and a material for it. Stone that takes the light of one
 // flame well: warm where it is lit, a little glow carried through it, the folds kept dark by the occlusion
 // baked in the vertices.
 
-/** Loads a .bin from canova.mjs. Returns a BufferGeometry in metres, standing on y = 0; null if it is missing. */
+/** Loads a .bin from scan.mjs. Returns a BufferGeometry in metres, standing on y = 0; null if it is missing. */
 export async function loadMarble(path) {
   const res = await fetch(`${import.meta.env.BASE_URL}${path}`).catch(() => null);
   if (!res || !res.ok) return null;
@@ -12,6 +12,7 @@ export async function loadMarble(path) {
   const head = new DataView(buf);
   const n = head.getUint32(0, true);
   const m = head.getUint32(4, true);
+  if (buf.byteLength !== 32 + n * 6 + m * 2 + n * 3 + n) return null;
   const min = [8, 12, 16].map((o) => head.getFloat32(o, true));
   const size = [20, 24, 28].map((o) => head.getFloat32(o, true));
   let at = 32;

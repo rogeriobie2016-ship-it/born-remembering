@@ -35,7 +35,7 @@ export async function loadArt(dir, names) {
  * paint's own, so a dim scene never turns a painting to mud. Multiplied at the end for premultiplied blending
  * (`premultipliedAlpha`). The export bleeds colour past the mask, so filtered edges carry no halo.
  */
-function paintedLight(mat, self) {
+export function paintedLight(mat, self) {
   mat.onBeforeCompile = (shader) => {
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <opaque_fragment>',

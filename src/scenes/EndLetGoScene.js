@@ -5,7 +5,8 @@ import { ease, lerp, glowTexture } from '../core/util.js';
 import { softMaterial } from '../core/look.js';
 import { engravedSky, engravedSea } from '../core/engraved.js';
 import { loadArt, cutout, groundShadow, cartouche, ScrollWriter } from '../core/collage.js';
-import { buildNursery, nurseryArt, GiantHand, EYE, meanderTexture, doricColumn, framedPainting } from './nursery.js';
+import { loadMarble, marbleMaterial } from '../core/marble.js';
+import { buildNursery, nurseryArt, GiantHand, handTint, EYE, meanderTexture, doricColumn, framedPainting } from './nursery.js';
 
 // 7B · Letting go (Odyssey XVII). No one to lose, no one to hold: a long life alone.
 // Old, you sit in a loggia on Ithaca at dusk, over an engraved sea. Landseer's old dog
@@ -175,6 +176,18 @@ export function buildLoggia(art) {
     group.add(print);
   }
 
+  // Penelope (a real scan), who also waited, on the right, where the print of Argos faces her from the left.
+  if (art.penelope) {
+    const seat = new THREE.Mesh(new RoundedBoxGeometry(0.95, 0.2, 0.72, 2, 0.03), stone);
+    seat.position.set(1.72, 0.1, -2.55);
+    seat.rotation.y = -0.45;
+    const fig = new THREE.Mesh(art.penelope, marbleMaterial({ color: '#e8dcc8', through: '#ff9a5c' }));
+    fig.position.set(1.72, 0.2, -2.55);
+    fig.rotation.y = -0.45;
+    fig.raycast = () => {};
+    group.add(seat, fig);
+  }
+
   // Argos, old, at your feet: Landseer's dog, a soft-edged apparition of paint.
   let argos = null;
   if (art.argos) {
@@ -238,17 +251,17 @@ export class EndLetGoScene extends BaseScene {
     ctx.haze.set({ amount: 0.2, color: '#f4ece2', blur: 0.8, saturate: 0.85 });
     ctx.grain.set({ grain: 0.06, vignette: 0.35, color: '#6b4a34' });
 
-    const [nArt, art] = await Promise.all([nurseryArt(), loadArt('endings', ['argos', 'argus'])]);
-    this.art = art;
+    const [nArt, art, penelope] = await Promise.all([nurseryArt(), loadArt('endings', ['argos', 'argus']), loadMarble('art/scans/penelope.bin')]);
+    this.art = { ...art, penelope };
     this.nursery = buildNursery(nArt);
     this.add(this.nursery.group);
     const n = this.nursery;
     n.mother.lean = 0.3;
-    n.motherHand.place(new THREE.Vector3(-0.05, 0.6, -0.78), [Math.PI / 2 - 0.3, Math.PI, 0]);
+    n.motherHand.place(new THREE.Vector3(-0.02, 0.88, -0.72), [Math.PI * 0.78, 0, 0]);
     n.motherHand.visible = true;
     n.motherHand.targetCurl = 0.05;
     this.babyHand = this.add(new GiantHand({ side: 1, skin: '#f2cdb4', sleeve: '#f3ebe0', scale: 0.5 }));
-    this.babyHand.place(new THREE.Vector3(-0.05, 0.66, -0.56), [Math.PI / 2 - 0.15, 0, Math.PI]);
+    this.babyHand.place(new THREE.Vector3(-0.03, 0.655, -0.5), [-0.5, 0, 0.1]);
     this.babyHand.visible = true;
 
     this.lids = new Eyelids();
@@ -318,8 +331,8 @@ export class EndLetGoScene extends BaseScene {
 
     // You grow old; the sun sinks toward the sea (it sets only once Argos is gone).
     const o = this.old;
-    const young = new THREE.Color('#d9b293');
-    const aged = new THREE.Color('#cbbcb0');
+    const young = handTint('#d9b293');
+    const aged = handTint('#cbbcb0');
     this.tween(20, (k) => {
       for (const h of o.hands) h.skinMat.color.lerpColors(young, aged, k);
       this.tremble = k * 0.004;

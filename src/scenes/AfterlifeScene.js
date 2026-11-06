@@ -4,6 +4,7 @@ import { ease, lerp, glowTexture } from '../core/util.js';
 import { softMaterial, paintedTexture } from '../core/look.js';
 import { engravedSea } from '../core/engraved.js';
 import { loadArt, cutout, cartouche, ScrollWriter } from '../core/collage.js';
+import { loadMarble, marbleMaterial } from '../core/marble.js';
 import { lyre } from '../core/synth.js';
 import { GiantHand } from './nursery.js';
 
@@ -139,8 +140,9 @@ export class AfterlifeScene extends BaseScene {
     this.speed = 0;
     this.light = 0; // 0 = Styx, 1 = Elysium
 
-    const [T] = await Promise.all([
+    const [T, fallen] = await Promise.all([
       loadArt('afterlife', ['styx-band', 'isle', 'cerberus', 'elysium-lyre', 'elysium-meadow']),
+      loadMarble('art/scans/dying-gladiator.bin'),
       ctx.audio.preload(['lyre', 'moonlight']),
     ]);
 
@@ -228,6 +230,18 @@ export class AfterlifeScene extends BaseScene {
     }
     flowers.raycast = () => {};
     this.world.add(flowers);
+    // The Dying Gladiator (a real scan), who has not noticed yet: one on each bank, passing the boat at arm's length of the mist.
+    if (fallen) {
+      const stone = marbleMaterial({ color: '#c9ced0', through: '#9fb0ba', shadow: '#10161a' });
+      for (const [x, y, z, turn, s] of [[-5.6, 0.48, -68, 1.25, 1.5], [5.9, 0.46, -86, -1.1, 1.35]]) {
+        const fig = new THREE.Mesh(fallen, stone);
+        fig.position.set(x, y, z);
+        fig.rotation.y = turn;
+        fig.scale.setScalar(s);
+        fig.raycast = () => {};
+        this.world.add(fig);
+      }
+    }
     this.shades = [];
     for (let i = 0; i < 26; i++) {
       const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: '#dfe6ea', transparent: true, opacity: 0.35, depthWrite: false }));

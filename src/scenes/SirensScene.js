@@ -286,8 +286,8 @@ export class SirensScene extends BaseScene {
     this.myHands = [-1, 1].map((side) => {
       const h = new GiantHand({ side, skin: '#f0d1bb', sleeve: '#f0d1bb', scale: 1.1 });
       h.visible = true;
-      h.position.set(0.28 * side, 1.05, -0.55); // world y: rig sits at EYE
-      h.rotation.set(Math.PI * 0.42, -0.25 * side, 0);
+      h.position.set(0.28 * side, 1.02, -0.55); // world y: rig sits at EYE
+      h.rotation.set(-0.45, -0.25 * side, 0.15 * side);
       h.targetCurl = 0.25;
       this.me.add(h);
       return h;

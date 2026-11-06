@@ -1,12 +1,10 @@
 import * as THREE from 'three';
 
-// Shared look: a hand-coloured copper engraving with Renaissance modelling.
-// Tone is drawn with ink hatching (parallel lines, crossed in the shadows) over
-// flat watercolour washes; shadows stay warm. Everything happens inside the
-// materials, so it works in the headset (no post-processing).
+// Shared look: oil paint. Whatever is modelled in 3D has to sit beside cut-outs from real
+// canvases, so its colour is laid in brushstrokes fixed to the world, warm in the shadows,
+// with no drawn lines at all. Everything happens inside the materials, so it works in the
+// headset (no post-processing), and the strokes are a mipmapped texture, so they don't shimmer.
 //
-// Lines are fixed to the world (never to the screen), and fade to their average
-// tone where they get finer than a pixel, so they don't shimmer in VR.
 
 /** GLSL: hatching helpers, shared by materials, sky and sea. */
 export const ENGRAVE_GLSL = /* glsl */ `
@@ -31,10 +29,44 @@ export const ENGRAVE_GLSL = /* glsl */ `
 
 export const INK = new THREE.Color('#2a1c14');
 
+let _brush = null;
+/** A tile of loose brushstrokes, grey around 0.5. It wraps, and it is data rather than colour. */
+export function brushTexture() {
+  if (_brush) return _brush;
+  _brush = paintedTexture(512, 512, (c, w, h) => {
+    c.fillStyle = '#808080';
+    c.fillRect(0, 0, w, h);
+    c.lineCap = 'round';
+    for (let i = 0; i < 1500; i++) {
+      const x = Math.random() * w;
+      const y = Math.random() * h;
+      const a = -0.7 + (Math.random() - 0.5) * 1.3;
+      const len = 30 + Math.random() * 110;
+      const bend = (Math.random() - 0.5) * 34;
+      const v = Math.random() < 0.5 ? 255 : 0;
+      c.strokeStyle = `rgba(${v},${v},${v},${0.035 + Math.random() * 0.1})`;
+      c.lineWidth = 3 + Math.random() * 20;
+      // drawn at each wrap, so the tile has no seam
+      for (const ox of [-w, 0, w]) {
+        for (const oy of [-h, 0, h]) {
+          c.beginPath();
+          c.moveTo(x + ox, y + oy);
+          c.quadraticCurveTo(x + ox + Math.cos(a) * len * 0.5 - Math.sin(a) * bend, y + oy + Math.sin(a) * len * 0.5 + Math.cos(a) * bend, x + ox + Math.cos(a) * len, y + oy + Math.sin(a) * len);
+          c.stroke();
+        }
+      }
+    }
+  });
+  _brush.colorSpace = THREE.NoColorSpace;
+  _brush.wrapS = _brush.wrapT = THREE.RepeatWrapping;
+  _brush.anisotropy = 4;
+  return _brush;
+}
+
 /**
- * Lambert, engraved and hand-coloured: watercolour wash + ink hatching in world space,
- * warm (umber) shadows, a soft rim so forms still read as backlit.
- * `hatch` = engraved lines per metre (0 = wash only). Uniforms live in `mat.userData.rim`.
+ * Lambert, painted: a body colour broken by brushstrokes in world space, warm (umber) shadows,
+ * a soft rim so forms still read as backlit.
+ * `hatch` sets the size of the brush: higher is finer, 0 is flat colour. Uniforms live in `mat.userData.rim`.
  */
 export function softMaterial({ color = '#ffffff', rim = '#fff1dc', rimPower = 2.2, rimStrength = 0.35, hatch = 70, umber = '#5a3522', ...extra } = {}) {
   const mat = new THREE.MeshLambertMaterial({ color, ...extra });
@@ -44,7 +76,7 @@ export function softMaterial({ color = '#ffffff', rim = '#fff1dc', rimPower = 2.
     rimStrength: { value: rimStrength },
     hatchScale: { value: hatch },
     umber: { value: new THREE.Color(umber) },
-    inkColor: { value: INK.clone() },
+    brushMap: { value: brushTexture() },
   };
   mat.userData.rim = uniforms;
   mat.onBeforeCompile = (shader) => {
@@ -69,9 +101,8 @@ export function softMaterial({ color = '#ffffff', rim = '#fff1dc', rimPower = 2.
         uniform float rimStrength;
         uniform float hatchScale;
         uniform vec3 umber;
-        uniform vec3 inkColor;
-        varying vec3 vPaintPos;
-        ${ENGRAVE_GLSL}`,
+        uniform sampler2D brushMap;
+        varying vec3 vPaintPos;`,
       )
       .replace(
         '#include <opaque_fragment>',
@@ -81,15 +112,23 @@ export function softMaterial({ color = '#ffffff', rim = '#fff1dc', rimPower = 2.
           // hand-coloured wash: mostly flat colour, modelled gently, shadows warm
           vec3 wash = albedo * mix(0.62, 1.06, smoothstep(0.05, 1.0, shade));
           wash = mix(umber * 0.9 + albedo * 0.25, wash, smoothstep(0.0, 0.55, shade) * 0.75 + 0.25);
-          float ink = 0.0;
-          if (hatchScale > 0.0) ink = engrave(vPaintPos * hatchScale, shade);
+          if (hatchScale > 0.0) {
+            // an oblique slice through the strokes: one lookup each and no seams, on any face
+            vec3 bp = vPaintPos * (hatchScale / 40.0 + 0.5);
+            vec2 at = vec2(dot(bp, vec3(0.8, 0.35, 0.48)), dot(bp, vec3(-0.5, 0.75, 0.42)));
+            float broad = texture2D(brushMap, at).r - 0.5;
+            float fine = texture2D(brushMap, at.yx * 2.7 + 0.37).r - 0.5;
+            float stroke = broad * 1.1 + fine * 0.6;
+            wash *= 1.0 + stroke * 0.55;
+            wash = mix(wash, wash * vec3(1.06, 0.99, 0.88), clamp(stroke * 2.0 + 0.5, 0.0, 1.0) * 0.5);
+          }
           float rimK = pow(1.0 - saturate(abs(dot(normalize(normal), normalize(vViewPosition)))), rimPower);
-          outgoingLight = mix(wash, inkColor, ink * 0.72) + rimColor * rimK * rimStrength;
+          outgoingLight = wash + rimColor * rimK * rimStrength;
         }
         #include <opaque_fragment>`,
       );
   };
-  mat.customProgramCacheKey = () => 'engraved';
+  mat.customProgramCacheKey = () => 'painted';
   return mat;
 }
 

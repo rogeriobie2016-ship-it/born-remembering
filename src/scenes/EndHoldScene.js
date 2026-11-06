@@ -4,6 +4,7 @@ import { BaseScene } from '../core/SceneManager.js';
 import { ease, glowTexture } from '../core/util.js';
 import { softMaterial, paintedTexture, bakeGradient } from '../core/look.js';
 import { loadArt, cutout, cartouche, ScrollWriter } from '../core/collage.js';
+import { loadMarble, marbleMaterial } from '../core/marble.js';
 import { buildNursery, nurseryArt, GiantHand, EYE, meanderTexture, doricColumn, framedPainting } from './nursery.js';
 
 // 7A · Holding on (Odyssey XI). Years pass in her hand; then, at night, in a Greek
@@ -229,6 +230,14 @@ export function buildBedchamber(art) {
     group.add(face);
   }
 
+  // Germain Pilon's Mater Dolorosa (a real scan), against the back wall: the same vigil again, in stone.
+  if (art.mater) {
+    const veiled = new THREE.Mesh(art.mater, marbleMaterial({ color: '#fff0dc', through: '#ff9a5c' }));
+    veiled.position.set(0.1, 0, -3.55);
+    veiled.raycast = () => {};
+    group.add(veiled);
+  }
+
   // Oil lamp on a tall bronze stand; its flame is the only warm light.
   const bronze = softMaterial({ color: '#6a4a2a', rim: '#ffd08a', rimStrength: 0.5, hatch: 0 });
   const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, LAMP.y - 0.05, 10), bronze);
@@ -262,12 +271,12 @@ export function buildBedchamber(art) {
   group.add(glow);
 
   // Hands: hers palm up at the bed's edge, fingers toward you; yours resting in it.
-  const hers = new GiantHand({ side: -1, skin: '#e3c6ad', sleeve: '#8e3a28', scale: 1 });
-  hers.place(new THREE.Vector3(0.05, 0.66, -0.8), [Math.PI / 2 - 0.15, Math.PI, 0]);
+  const hers = new GiantHand({ side: -1, skin: '#e3c6ad', scale: 1.3 });
+  hers.place(new THREE.Vector3(-0.04, 0.84, -0.82), [0, 0, -1.75]);
   hers.visible = true;
   hers.targetCurl = 0.55;
   const yours = new GiantHand({ side: 1, skin: '#d9b293', sleeve: '#4a3a46', scale: 1 });
-  yours.place(new THREE.Vector3(0.05, 0.71, -0.66), [Math.PI / 2 - 0.2, 0, Math.PI]);
+  yours.place(new THREE.Vector3(0.03, 0.76, -0.6), [-0.55, 0, 0.1]);
   yours.visible = true;
   yours.targetCurl = 0.6;
 
@@ -315,20 +324,20 @@ export class EndHoldScene extends BaseScene {
     ctx.haze.set({ amount: 0.2, color: '#f4ece2', blur: 0.8, saturate: 0.85 });
     ctx.grain.set({ grain: 0.06, vignette: 0.35, color: '#6b4a34' });
 
-    const [nArt, art] = await Promise.all([nurseryArt(), loadArt('endings', ['david'])]);
-    this.art = { ...art, face: nArt['andromache-face'] };
+    const [nArt, art, mater] = await Promise.all([nurseryArt(), loadArt('endings', ['david']), loadMarble('art/scans/mater-dolorosa.bin')]);
+    this.art = { ...art, face: nArt['andromache-face'], mater };
     this.nursery = buildNursery(nArt);
     this.add(this.nursery.group);
     const n = this.nursery;
     n.mother.lean = 0.3;
 
     // The mother's giant hand, palm up, fingers toward you…
-    n.motherHand.place(new THREE.Vector3(-0.05, 0.6, -0.78), [Math.PI / 2 - 0.3, Math.PI, 0]);
+    n.motherHand.place(new THREE.Vector3(-0.02, 0.88, -0.72), [Math.PI * 0.78, 0, 0]);
     n.motherHand.visible = true;
     n.motherHand.targetCurl = 0.05;
     // …and your tiny one inside it.
     this.babyHand = this.add(new GiantHand({ side: 1, skin: '#f2cdb4', sleeve: '#f3ebe0', scale: 0.5 }));
-    this.babyHand.place(new THREE.Vector3(-0.05, 0.66, -0.56), [Math.PI / 2 - 0.15, 0, Math.PI]);
+    this.babyHand.place(new THREE.Vector3(-0.03, 0.655, -0.5), [-0.5, 0, 0.1]);
     this.babyHand.visible = true;
     this.babyHand.targetCurl = 0.2;
     this.holding = [n.motherHand, this.babyHand];
@@ -434,7 +443,7 @@ export class EndHoldScene extends BaseScene {
   async reachThrice(input) {
     const shade = this.shade;
     const hand = this.bed.yours;
-    const rest = [hand.position.clone(), [Math.PI / 2 - 0.2, 0, Math.PI]];
+    const rest = [hand.position.clone(), [-0.55, 0, 0.1]];
     const spots = [new THREE.Vector3(-0.5, 1.55, -2.8), new THREE.Vector3(0.15, 1.75, -3.2), new THREE.Vector3(-0.25, 2.0, -3.6)];
     let wanted = false;
     input.add(shade.userData.fig, { onSelect: () => (wanted = true), dwell: 0.9 });

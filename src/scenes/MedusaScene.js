@@ -3,7 +3,8 @@ import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { BaseScene } from '../core/SceneManager.js';
 import { ease, lerp, glowTexture } from '../core/util.js';
 import { softMaterial, lightShaftMaterial, bindShaft, paintedTexture } from '../core/look.js';
-import { loadArt, cutout, cartouche, ScrollWriter } from '../core/collage.js';
+import { loadArt, cutout, cartouche, ScrollWriter, groundShadow } from '../core/collage.js';
+import { loadMarble, marbleMaterial } from '../core/marble.js';
 import { GiantHand } from './nursery.js';
 import { thump } from '../core/synth.js';
 
@@ -13,11 +14,15 @@ import { thump } from '../core/synth.js';
 // of your earlier lives, turned to marble (the Graces, Mercury, Icarus, a Siren, Orpheus).
 // Burne-Jones's "Baleful Head" hangs on the rock like an altarpiece. Out of the dark comes
 // a polished shield held by an armoured hand: Perseus, who looks only at reflections.
-// In its bronze is Caravaggio's Medusa — and it is you. You turn to stone.
+// In its bronze is Caravaggio's Medusa — and it is you. You turn to stone. The shield is lowered, the
+// light finds what stood behind it all along: Canova's Perseus (a real scan, 1804–06), lifting your head.
 // (Ovid has Perseus behead her; meeting her own gaze is our retelling.)
 
 const EYE = 1.6;
 const DARK = new THREE.Color('#0e0d0c');
+// Canova's Perseus: one more statue in the grotto until the light finds him. He faces you, and holds the head
+// out toward the middle of your view. `head` is the Gorgon's head on the mesh, in metres; `dim` and `lit` his stone.
+const PERSEUS = { x: -0.5, z: -5.8, turn: THREE.MathUtils.degToRad(100), scale: 1.25, plinth: 0.3, head: new THREE.Vector3(0.02, 2.16, 0.87), dim: new THREE.Color('#928d84'), lit: new THREE.Color('#fff4e2').multiplyScalar(1.2) };
 
 /** Branching cracks, white on transparent: what stone looks like from inside. */
 function crackTexture() {
@@ -106,8 +111,9 @@ export class MedusaScene extends BaseScene {
     ctx.audio.define('stone', stoneSound);
     ctx.audio.define('thump', () => thump()); // footsteps of the unseen hero
 
-    const [T] = await Promise.all([
+    const [T, perseusGeo] = await Promise.all([
       loadArt('medusa', ['shield', 'baleful-head', 'stone-graces', 'stone-mercury', 'stone-icarus', 'stone-siren', 'stone-orpheus']),
+      loadMarble('art/scans/perseus.bin'),
       ctx.audio.preload(['stone', 'thump', 'ninth']),
     ]);
 
@@ -216,6 +222,43 @@ export class MedusaScene extends BaseScene {
       this.add(panel);
     }
 
+    // ---------- Perseus: there all along, in the dark behind the shield ----------
+    if (perseusGeo) {
+      this.perseus = new THREE.Group();
+      this.perseus.position.set(PERSEUS.x, 0, PERSEUS.z);
+      this.perseus.rotation.y = PERSEUS.turn;
+      this.perseus.scale.setScalar(PERSEUS.scale);
+      this.perseusStone = marbleMaterial({ color: '#000000', through: '#d9c9a8', shadow: '#10141a' });
+      this.perseusStone.color.copy(PERSEUS.dim);
+      this.perseusStone.userData.marble.heartColor.value.set('#ffd9a0');
+      const fig = new THREE.Mesh(perseusGeo, this.perseusStone);
+      fig.position.y = PERSEUS.plinth - 0.03;
+      fig.frustumCulled = false;
+      this.perseusPlinth = softMaterial({ color: '#b3ab9d', rim: '#eeeae0', rimStrength: 0.2, hatch: 14, umber: '#4a443c' });
+      this.perseusPlinth.color.multiplyScalar(0.4);
+      const plinth = new THREE.Mesh(new THREE.CylinderGeometry(1, 1.05, PERSEUS.plinth, 32), this.perseusPlinth);
+      plinth.scale.set(0.72, 1, 0.72);
+      plinth.position.y = PERSEUS.plinth / 2;
+      this.perseus.add(fig, plinth);
+      this.perseus.traverse((o) => (o.raycast = () => {}));
+      this.add(this.perseus);
+      this.perseus.updateWorldMatrix(true, false);
+      const heart = this.perseus.localToWorld(PERSEUS.head.clone().setY(PERSEUS.head.y + PERSEUS.plinth));
+      this.perseusStone.userData.marble.heart.value.set(heart.x, heart.y, heart.z, 0);
+      const shadow = groundShadow(2.6);
+      shadow.position.set(PERSEUS.x, 0.012, PERSEUS.z);
+      this.add(shadow);
+      const shaftGeo = new THREE.CylinderGeometry(0.55, 1.3, 12, 24, 1, true);
+      shaftGeo.translate(0, -6, 0);
+      const uv = shaftGeo.attributes.uv;
+      for (let i = 0; i < uv.count; i++) uv.setX(i, 0.5);
+      this.perseusShaft = bindShaft(new THREE.Mesh(shaftGeo, lightShaftMaterial('#dce8ef', 0.38)));
+      this.perseusShaft.position.set(PERSEUS.x, 11, PERSEUS.z);
+      this.perseusShaft.material.opacity = 0;
+      this.perseusShaft.visible = false;
+      this.add(this.perseusShaft);
+    }
+
     // ---------- the shield, held out of the dark ----------
     this.shield = new THREE.Group();
     const rimMat = softMaterial({ color: '#9b7b3a', rim: '#fff0c0', rimStrength: 0.8, hatch: 50 });
@@ -310,6 +353,23 @@ export class MedusaScene extends BaseScene {
     for (const h of this.myHands) h.visible = true;
     this.sound('stone', { volume: 0.9 });
     const stone = new THREE.Color('#8f897f');
+    // the shield comes down, and the light finds who held it
+    const held = this.shield.position.clone();
+    const lowered = new THREE.Vector3(held.x + 0.75, EYE - 1.35, held.z + 0.15);
+    if (this.perseus) {
+      this.perseusShaft.visible = true;
+      this.tween(
+        6.5,
+        (k) => {
+          const lit = THREE.MathUtils.smoothstep(k, 0.25, 1);
+          this.shield.position.lerpVectors(held, lowered, THREE.MathUtils.smoothstep(k, 0.1, 0.6));
+          this.perseusStone.color.lerpColors(PERSEUS.dim, PERSEUS.lit, lit);
+          this.perseusStone.userData.marble.heart.value.w = 0.55 * lit;
+          this.perseusPlinth.color.setRGB(0.7, 0.67, 0.62).multiplyScalar(lerp(0.4, 0.8, lit));
+          this.perseusShaft.material.opacity = 0.42 * lit;
+        },
+      );
+    }
     await this.tween(
       5,
       (k) => {
